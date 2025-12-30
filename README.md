@@ -31,6 +31,22 @@ Provide these variables to automatically publish a JSON snapshot of all patterns
 - `GITHUB_PATTERNS_BRANCH` — branch to write to (default: `main`)
 - `GITHUB_PATTERNS_PATH` — path inside the repo for the JSON (default: `data/patterns.json`)
 
+## Deploying to Netlify (serverless)
+
+Netlify can host the Flask app as a Python function while serving the `static/` assets directly. This prevents the default 404 page and keeps routing aligned with the Flask views:
+
+1. Set your environment variables (`DATABASE_URL`, `APP_SECRET_KEY`, and any GitHub sync keys) in the Netlify site settings.
+2. Deploy the repository. Netlify will package `netlify/functions/app.py` with the included `templates/` and `static/` folders and expose it at `/.netlify/functions/app`.
+3. The `netlify.toml` redirect forwards all routes to the function while letting Netlify serve static files from the `static/` directory.
+4. If Neon is used, ensure Netlify can reach it (e.g., allowlisting IPs or using a pooled connection string).
+
+Local test with the Netlify CLI:
+
+```bash
+netlify dev --port 8888
+```
+
+
 ## Deploying with GitHub Actions + GHCR
 1. Publish the repo to GitHub and create a [fine-grained personal access token](https://github.com/settings/tokens) with `write:packages` scope. Save it as the `GHCR_TOKEN` secret in your repository settings.
 2. Push to `main` (or trigger the workflow manually). The included workflow will:
