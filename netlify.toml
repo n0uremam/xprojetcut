@@ -1,6 +1,7 @@
 [build]
   functions = "netlify/functions"
-  publish = "static"
+  # Publish the project root so Netlify can pick up `_redirects` and `Homepage.html`.
+  publish = "."
 
 [functions]
   included_files = ["app.py", "templates/**", "static/**"]
