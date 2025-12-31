@@ -1,9 +1,9 @@
 [build]
   command = "pip install -r netlify/functions/requirements.txt"
-  functions = "netlify/functions"
+  functions = "../netlify/functions"
   publish = "."
 [functions]
-  included_files = ["templates/**", "static/**"]
+  included_files = ["../templates/**", "../static/**"]
   node_bundler = "none"
   external_node_modules = []
 [[redirects]]
