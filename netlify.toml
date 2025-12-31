@@ -2,11 +2,9 @@
   functions = "netlify/functions"
   # Publish the project root so Netlify can pick up `_redirects` and `Homepage.html`.
   publish = "."
-
 [functions]
   included_files = ["app.py", "templates/**", "static/**"]
-
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/app/:splat"
+  to = "/Homepage.html"
   status = 200
