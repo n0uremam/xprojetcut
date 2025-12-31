@@ -8,11 +8,6 @@
 
 [[redirects]]
   from = "/"
-  to = "/home"
-  status = 302
-
-[[redirects]]
-  from = "/home"
   to = "/Homepage.html"
   status = 200
 
