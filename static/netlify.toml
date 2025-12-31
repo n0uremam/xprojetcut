@@ -14,7 +14,6 @@
   package = "netlify-plugin-fetch-feeds"
   [plugins.inputs]
     feeds = []
-    cacheDuration = 3600
     dataDir = "netlify_feeds"
 [[redirects]]
   from = "/*"
