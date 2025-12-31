@@ -1,0 +1,6 @@
+Flask==3.0.2
+Werkzeug==3.0.1
+gunicorn==21.2.0
+SQLAlchemy==2.0.29
+requests==2.31.0
+apig-wsgi==2.15.0
