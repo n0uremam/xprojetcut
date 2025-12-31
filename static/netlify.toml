@@ -1,10 +1,9 @@
 [build]
-  command = "pip install -r netlify/functions/requirements.txt"
-  functions = "netlify/functions"
+  functions = "../netlify/functions"
   publish = "."
 
 [functions]
-  included_files = ["templates/**", "static/**", "patterns.db"]
+  included_files = ["../templates/**", "../static/**", "../patterns.db"]
 
 [[redirects]]
   from = "/"
