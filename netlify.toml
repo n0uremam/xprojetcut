@@ -1,10 +1,10 @@
 [build]
   functions = "netlify/functions"
-  # Publish the project root so Netlify can pick up `_redirects` and `Homepage.html`.
-  publish = "."
+  # Serve the built static directory while letting redirects route requests to the Function.
+  publish = "static"
 [functions]
   included_files = ["app.py", "templates/**", "static/**"]
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/app"
+  to = "/.netlify/functions/app/:splat"
   status = 200
