@@ -5,6 +5,12 @@
 [functions]
   included_files = ["app.py", "templates/**", "static/**"]
 
+[[plugins]]
+  package = "netlify-plugin-fetch-feeds"
+  [plugins.inputs]
+    feeds = []
+    dataDir = "netlify_feeds"
+
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/app/:splat"
