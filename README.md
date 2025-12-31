@@ -33,12 +33,13 @@ Provide these variables to automatically publish a JSON snapshot of all patterns
 
 ## Deploying to Netlify (serverless)
 
-Netlify can host the Flask app as a Python function while serving the `static/` assets directly. This prevents the default 404 page and keeps routing aligned with the Flask views:
+Netlify can host the Flask app as a Python function while serving the `static/` assets directly. The included `netlify.toml` keeps deployment simple:
 
 1. Set your environment variables (`DATABASE_URL`, `APP_SECRET_KEY`, and any GitHub sync keys) in the Netlify site settings.
-2. Deploy the repository. Netlify will package `netlify/functions/app.py` with the included `templates/` and `static/` folders and expose it at `/.netlify/functions/app`.
-3. The `netlify.toml` redirect forwards all routes to the function while letting Netlify serve static files from the `static/` directory.
-4. If Neon is used, ensure Netlify can reach it (e.g., allowlisting IPs or using a pooled connection string).
+2. Deploy the repository. The build command (`pip install -r netlify/functions/requirements.txt`) vendors Python dependencies for the function.
+3. Netlify packages `netlify/functions/app.py` with the included `templates/` and `static/` folders and exposes it at `/.netlify/functions/app`.
+4. The `_redirects` file and `netlify.toml` both forward every route to the function so users avoid Netlify's default 404 page.
+5. If Neon is used, ensure Netlify can reach it (e.g., allowlisting IPs or using a pooled connection string).
 
 Local test with the Netlify CLI:
 

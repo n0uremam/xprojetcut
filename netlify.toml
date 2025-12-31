@@ -1,8 +1,13 @@
 [build]
+  command = "pip install -r netlify/functions/requirements.txt"
   functions = "netlify/functions"
   publish = "."
+
 [functions]
   included_files = ["templates/**", "static/**"]
+  node_bundler = "none"
+  external_node_modules = []
+
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/app/:splat"
