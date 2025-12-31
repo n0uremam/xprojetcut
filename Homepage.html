@@ -1,26 +1,16 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Vehicle Patterns Library</title>
-  <meta http-equiv="refresh" content="0;url=/.netlify/functions/app/" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 2rem; background: #f5f5f5; }
-    .card { max-width: 640px; margin: 3rem auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); padding: 2rem; text-align: center; }
-    h1 { margin-top: 0; }
-    p { color: #333; line-height: 1.5; }
-    a.button { display: inline-block; margin-top: 1.5rem; padding: 0.75rem 1.25rem; background: #3367d6; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600; }
-    a.button:hover { background: #254a9c; }
-    code { background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 4px; }
-  </style>
+  <meta charset="UTF-8" />
+  <title>Loading the app…</title>
+  <meta http-equiv="refresh" content="0; url=/.netlify/functions/app" />
 </head>
 <body>
-  <div class="card">
-    <h1>Loading the app…</h1>
-    <p>We’re sending you to the Flask-powered backend deployed as a Netlify Function. If you are not redirected automatically, click the button below.</p>
-    <a class="button" href="/.netlify/functions/app/">Open the app</a>
-    <p style="margin-top:1rem;font-size:0.95rem;color:#555;">This static <code>Homepage.html</code> is provided so Netlify rewrite rules have a real target and avoid the default 404 page.</p>
-  </div>
+  <h1>Loading the app…</h1>
+  <p>If you are not redirected automatically, click the button below.</p>
+  <a href="/.netlify/functions/app"><button>Open the app</button></a>
+  <script>
+    window.location.replace("/.netlify/functions/app");
+  </script>
 </body>
 </html>
