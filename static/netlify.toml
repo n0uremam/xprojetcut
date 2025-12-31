@@ -6,5 +6,5 @@
   included_files = ["app.py", "templates/**", "static/**"]
 [[redirects]]
   from = "/*"
-  to = "/Homepage.html"
+  to = "/.netlify/functions/app"
   status = 200
