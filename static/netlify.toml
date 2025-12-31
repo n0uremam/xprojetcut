@@ -2,10 +2,19 @@
   command = "pip install -r netlify/functions/requirements.txt"
   functions = "../netlify/functions"
   publish = "."
+[build.environment]
+  # Keep plugin behavior aligned with root Netlify config.
+
 [functions]
   included_files = ["../templates/**", "../static/**"]
   node_bundler = "none"
   external_node_modules = []
+
+[[plugins]]
+  package = "netlify-plugin-fetch-feeds"
+  [plugins.inputs]
+    feeds = []
+    cacheDuration = 3600
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/app/:splat"

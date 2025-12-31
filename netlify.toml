@@ -2,10 +2,21 @@
   command = "pip install -r netlify/functions/requirements.txt"
   functions = "netlify/functions"
   publish = "."
+[build.environment]
+  # Disable optional build plugins that are enabled in the Netlify UI.
+  # The fetch-feeds plugin fails when no feeds are configured, so we provide
+  # an explicit empty configuration below to turn it into a no-op.
+  
 [functions]
   included_files = ["templates/**", "static/**"]
   node_bundler = "none"
   external_node_modules = []
+
+[[plugins]]
+  package = "netlify-plugin-fetch-feeds"
+  [plugins.inputs]
+    feeds = []
+    cacheDuration = 3600
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/app/:splat"
