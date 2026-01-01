@@ -76,7 +76,7 @@ exports.handler = async () => {
           <div>
             <p class="text-uppercase text-primary fw-semibold small mb-1">Admin tools</p>
             <h2 class="h5 mb-2">Sign in to manage patterns</h2>
-            <p class="text-muted small mb-0">Use the default credentials <span class="fw-semibold">admin / admin123</span> to test adding and editing patterns locally.</p>
+            <p class="text-muted small mb-0" id="admin-help">Use the default credentials <span class="fw-semibold">admin / admin123</span> to test adding and editing patterns locally.</p>
           </div>
           <div class="text-end">
             <button class="btn btn-primary" id="open-form-btn" type="button" disabled>New pattern</button>
@@ -97,8 +97,13 @@ exports.handler = async () => {
           </div>
         </form>
 
+        <div class="alert alert-info d-none mt-3" id="upload-note">
+          Uploaded images are stored locally in your browser under <code>local-uploads/</code> and used for preview only.
+        </div>
+
         <form class="row gy-3 mt-3 d-none" id="pattern-form">
           <input type="hidden" id="editing-index" value="">
+          <input type="hidden" id="image_path" value="">
           <div class="col-md-3">
             <label class="form-label">Code</label>
             <input class="form-control" id="code" name="code" type="text" required>
@@ -128,8 +133,13 @@ exports.handler = async () => {
             <input class="form-control" id="trim" name="trim" type="text" required>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Image URL</label>
-            <input class="form-control" id="image_url" name="image_url" type="url" placeholder="https://" required>
+            <label class="form-label">Upload image</label>
+            <input class="form-control" id="image_file" name="image_file" type="file" accept="image/*">
+            <div class="form-text">Files are saved locally inside <code>local-uploads/</code> and used for previews.</div>
+            <div class="mt-2 d-none" id="image-preview-wrap">
+              <img alt="Preview" id="image-preview" class="img-fluid rounded" style="max-height: 180px; object-fit: cover;">
+              <div class="small text-muted mt-1" id="image-path-label"></div>
+            </div>
           </div>
           <div class="col-12">
             <label class="form-label">Description</label>
@@ -187,6 +197,19 @@ exports.handler = async () => {
     <script>
       const patterns = ${JSON.stringify(patterns)};
       let adminLogged = false;
+      let uploads = {};
+
+      function loadUploads() {
+        try {
+          uploads = JSON.parse(localStorage.getItem('patternUploads') || '{}');
+        } catch (err) {
+          uploads = {};
+        }
+      }
+
+      function saveUploads() {
+        localStorage.setItem('patternUploads', JSON.stringify(uploads));
+      }
 
       function unique(values) {
         return Array.from(new Set(values.filter(Boolean))).sort();
@@ -217,6 +240,13 @@ exports.handler = async () => {
         refreshDropdowns(filtered);
       }
 
+      function resolveImageSrc(src) {
+        if (src && src.startsWith('local-uploads/')) {
+          return uploads[src] || 'https://via.placeholder.com/800x450.png?text=Local+image+missing';
+        }
+        return src || 'https://via.placeholder.com/800x450.png?text=Pattern';
+      }
+
       function renderCards(list) {
         const container = document.getElementById('cards');
         container.innerHTML = '';
@@ -233,7 +263,7 @@ exports.handler = async () => {
           card.className = 'col-md-4';
           card.innerHTML =
             '<div class="card h-100 shadow-sm border-0">' +
-            '<img src="' + p.image_url + '" class="card-img-top" alt="' + p.name + '">' +
+            '<img src="' + resolveImageSrc(p.image_url) + '" class="card-img-top" alt="' + p.name + '">' +
             '<div class="card-body d-flex flex-column">' +
             '<div class="d-flex justify-content-between align-items-start mb-2">' +
             '<span class="badge bg-primary">' + p.code + '</span>' +
@@ -307,8 +337,11 @@ exports.handler = async () => {
         document.getElementById('logout-btn').classList.toggle('d-none', !isLoggedIn);
         document.getElementById('open-form-btn').disabled = !isLoggedIn;
         document.getElementById('pattern-form').classList.toggle('d-none', !isLoggedIn);
+        document.getElementById('login-form').classList.toggle('d-none', isLoggedIn);
+        document.getElementById('upload-note').classList.toggle('d-none', !isLoggedIn);
         document.querySelector('.admin-panel').classList.toggle('border-success', isLoggedIn);
         document.querySelector('.admin-panel').classList.toggle('border', isLoggedIn);
+        document.getElementById('admin-help').textContent = isLoggedIn ? 'Admin mode active — you can add new patterns or edit any card.' : 'Use the default credentials admin / admin123 to test adding and editing patterns locally.';
         renderCards(patterns);
       }
 
@@ -318,7 +351,8 @@ exports.handler = async () => {
 
       document.getElementById('logout-btn').addEventListener('click', () => {
         toggleAdminUI(false);
-        document.getElementById('login-form').classList.add('d-none');
+        document.getElementById('login-form').classList.remove('d-none');
+        resetForm();
       });
 
       document.getElementById('login-form').addEventListener('submit', (event) => {
@@ -343,10 +377,37 @@ exports.handler = async () => {
         resetForm();
       });
 
+      document.getElementById('image_file').addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+          const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+          const path = 'local-uploads/' + Date.now() + '-' + safeName;
+          uploads[path] = loadEvent.target.result;
+          saveUploads();
+          document.getElementById('image_path').value = path;
+          showPreview(path);
+        };
+        reader.readAsDataURL(file);
+      });
+
       function resetForm() {
         document.getElementById('editing-index').value = '';
+        document.getElementById('image_path').value = '';
+        document.getElementById('image-preview-wrap').classList.add('d-none');
         document.getElementById('pattern-form').reset();
         document.getElementById('save-pattern-btn').textContent = 'Save pattern';
+      }
+
+      function showPreview(path) {
+        if (!path) {
+          document.getElementById('image-preview-wrap').classList.add('d-none');
+          return;
+        }
+        document.getElementById('image-preview').src = resolveImageSrc(path);
+        document.getElementById('image-path-label').textContent = path.startsWith('local-uploads/') ? 'Saved locally as ' + path : path;
+        document.getElementById('image-preview-wrap').classList.remove('d-none');
       }
 
       function startEditing(index) {
@@ -359,7 +420,8 @@ exports.handler = async () => {
         document.getElementById('year').value = item.year;
         document.getElementById('model').value = item.model;
         document.getElementById('trim').value = item.trim;
-        document.getElementById('image_url').value = item.image_url;
+        document.getElementById('image_path').value = item.image_url || '';
+        showPreview(item.image_url);
         document.getElementById('description').value = item.description;
         document.getElementById('tags').value = item.tags || '';
         document.getElementById('pattern-form').classList.remove('d-none');
@@ -369,6 +431,7 @@ exports.handler = async () => {
 
       document.getElementById('pattern-form').addEventListener('submit', (event) => {
         event.preventDefault();
+        const existingPath = document.getElementById('image_path').value.trim();
         const newItem = {
           code: document.getElementById('code').value.trim(),
           name: document.getElementById('name').value.trim(),
@@ -378,7 +441,7 @@ exports.handler = async () => {
           year: document.getElementById('year').value.trim(),
           model: document.getElementById('model').value.trim(),
           trim: document.getElementById('trim').value.trim(),
-          image_url: document.getElementById('image_url').value.trim() || 'https://via.placeholder.com/800x450.png?text=Pattern',
+          image_url: existingPath || 'https://via.placeholder.com/800x450.png?text=Pattern',
           tags: document.getElementById('tags').value.trim(),
         };
 
@@ -396,6 +459,7 @@ exports.handler = async () => {
       });
 
       // Initialize
+      loadUploads();
       refreshDropdowns(patterns);
       renderCards(patterns);
     </script>
