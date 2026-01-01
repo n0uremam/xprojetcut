@@ -1,0 +1,1 @@
+# Empty because the Netlify function is Node-based; kept to satisfy Netlify build command.

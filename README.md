@@ -15,8 +15,9 @@ Netlify Functions only run JavaScript/TypeScript/Go. This repository ships a min
 
 ## Deploying to Netlify
 1. Ensure the build settings use `publish = .` and `functions = netlify/functions` (already set in `netlify.toml`).
-2. Deploy the repo.
-3. After the deploy finishes, open these URLs (replace YOUR-SITE with your domain):
+2. If your Netlify UI build command still runs `pip install -r netlify/functions/requirements.txt`, the repo includes a placeholder file there so the step succeeds even though the function is Node-based.
+3. Deploy the repo.
+4. After the deploy finishes, open these URLs (replace YOUR-SITE with your domain):
    - `https://YOUR-SITE.netlify.app/` → shows the loading page briefly
    - `https://YOUR-SITE.netlify.app/Homepage.html` → same loading page
    - `https://YOUR-SITE.netlify.app/.netlify/functions/app` → displays **“Netlify Function is working ✅”**
