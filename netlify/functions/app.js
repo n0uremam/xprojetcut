@@ -174,8 +174,7 @@ exports.handler = async () => {
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
           <div id="admin-info" class="d-none">
             <p class="text-uppercase text-primary fw-semibold small mb-1">Admin tools</p>
-            <h2 class="h5 mb-2">Sign in to manage patterns</h2>
-            <p class="text-muted small mb-0" id="admin-help">Use the default credentials <span class="fw-semibold">admin / admin123</span> to test adding and editing patterns locally.</p>
+            <h2 class="h5 mb-0">Sign in to manage patterns</h2>
           </div>
           <div class="text-end">
             <button class="btn btn-primary" id="open-form-btn" type="button" disabled>New pattern</button>
@@ -498,13 +497,10 @@ exports.handler = async () => {
         document.getElementById('open-form-btn').disabled = !isLoggedIn;
         document.getElementById('pattern-form').classList.toggle('d-none', !isLoggedIn);
         document.getElementById('login-form').classList.toggle('d-none', isLoggedIn);
-        document.getElementById('admin-info').classList.toggle('d-none', !isLoggedIn);
+        document.getElementById('admin-info').classList.toggle('d-none', isLoggedIn);
         document.getElementById('upload-note').classList.toggle('d-none', !isLoggedIn);
         document.querySelector('.admin-panel').classList.toggle('border-success', isLoggedIn);
         document.querySelector('.admin-panel').classList.toggle('border', isLoggedIn);
-        document.getElementById('admin-help').textContent = isLoggedIn
-          ? 'Admin mode active — you can add new patterns or edit any card.'
-          : 'Use the default credentials admin / admin123 to test adding and editing patterns locally.';
         renderCards(patterns);
       }
 
@@ -529,7 +525,7 @@ exports.handler = async () => {
           toggleAdminUI(true);
           document.getElementById('login-form').classList.add('d-none');
         } else {
-          alert('Invalid credentials. Use admin / admin123 for the demo.');
+          alert('Invalid credentials.');
         }
       });
 

@@ -26,3 +26,7 @@ If the last URL 404s, Netlify did not find `netlify/functions/app.js` during the
 
 ## Using a different backend
 Netlify does **not** run Python/Flask functions. If you need Flask, host it on a Python-friendly provider (Render, Railway, etc.) and call it from the frontend. To keep everything on Netlify, rewrite the backend in Node.js as additional functions alongside `netlify/functions/app.js`.
+
+## Pattern data folder
+
+The `patterns/` directory is included for storing exported pattern JSON or assets under version control. The in-browser admin tools keep edits locally (via `localStorage`); copy any saved datasets into `patterns/` if you want them tracked in GitHub.
