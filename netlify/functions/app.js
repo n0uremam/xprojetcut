@@ -146,23 +146,25 @@ exports.handler = async () => {
         }
         list.forEach((p) => {
           const tags = (p.tags || '').split(',').map((t) => t.trim()).filter(Boolean);
-          const tagHtml = tags.map((t) => `<span class="badge text-bg-light">${t}</span>`).join('');
+          const tagHtml = tags
+            .map((t) => '<span class="badge text-bg-light">' + t + '</span>')
+            .join('');
           const card = document.createElement('div');
           card.className = 'col-md-4';
-          card.innerHTML = `
-            <div class="card h-100 shadow-sm border-0">
-              <img src="${p.image_url}" class="card-img-top" alt="${p.name}">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <span class="badge bg-primary">${p.code}</span>
-                  <small class="text-muted">${p.type}</small>
-                </div>
-                <h5 class="card-title mb-1">${p.name}</h5>
-                <p class="text-muted small">${p.description}</p>
-                <p class="mb-1 fw-semibold">${p.brand} • ${p.year} • ${p.model} • ${p.trim}</p>
-                <div class="mt-auto d-flex flex-wrap gap-2">${tagHtml}</div>
-              </div>
-            </div>`;
+          card.innerHTML =
+            '<div class="card h-100 shadow-sm border-0">' +
+            '<img src="' + p.image_url + '" class="card-img-top" alt="' + p.name + '">' +
+            '<div class="card-body d-flex flex-column">' +
+            '<div class="d-flex justify-content-between align-items-start mb-2">' +
+            '<span class="badge bg-primary">' + p.code + '</span>' +
+            '<small class="text-muted">' + p.type + '</small>' +
+            '</div>' +
+            '<h5 class="card-title mb-1">' + p.name + '</h5>' +
+            '<p class="text-muted small">' + p.description + '</p>' +
+            '<p class="mb-1 fw-semibold">' + p.brand + ' • ' + p.year + ' • ' + p.model + ' • ' + p.trim + '</p>' +
+            '<div class="mt-auto d-flex flex-wrap gap-2">' + tagHtml + '</div>' +
+            '</div>' +
+            '</div>';
           container.appendChild(card);
         });
       }
