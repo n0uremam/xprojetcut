@@ -50,6 +50,19 @@ exports.handler = async () => {
     },
   ];
 
+  const brandOptions = [
+    "Abarth", "Acura", "Alfa Romeo", "Alpina", "Aston Martin", "Audi", "Bentley", "BMW", "Bugatti", "Buick",
+    "BYD", "Cadillac", "Changan", "Chery", "Chevrolet", "Chrysler", "Citroën", "Cupra", "Dacia", "Daewoo",
+    "Daihatsu", "Datsun", "Dodge", "DS Automobiles", "Ferrari", "Fiat", "Fisker", "Ford", "Genesis", "GMC",
+    "Great Wall", "Haval", "Hino", "Holden", "Honda", "Hummer", "Hyundai", "Infiniti", "Isuzu", "Jaguar",
+    "Jeep", "Kia", "Koenigsegg", "Lada", "Lamborghini", "Lancia", "Land Rover", "Lexus", "Lincoln", "Lotus",
+    "Lucid", "Maserati", "Maybach", "Mazda", "McLaren", "Mercedes-Benz", "Mercury", "MG", "Mini", "Mitsubishi",
+    "Morgan", "NIO", "Nissan", "Opel", "Pagani", "Peugeot", "Polestar", "Pontiac", "Porsche", "Proton",
+    "Ram", "Renault", "Rivian", "Rolls-Royce", "Saab", "Saleen", "Saturn", "Scion", "Seat", "Škoda",
+    "Smart", "SsangYong", "Subaru", "Suzuki", "Tata", "Tesla", "Toyota", "Vauxhall", "Volkswagen", "Volvo",
+    "Wuling", "Zotye"
+  ];
+
   const html = `<!DOCTYPE html>
   <html lang="en">
   <head>
@@ -73,7 +86,7 @@ exports.handler = async () => {
     <main class="container pb-5">
       <section class="admin-panel shadow-sm rounded-4 p-4 mb-4 bg-white">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-          <div>
+          <div id="admin-info" class="d-none">
             <p class="text-uppercase text-primary fw-semibold small mb-1">Admin tools</p>
             <h2 class="h5 mb-2">Sign in to manage patterns</h2>
             <p class="text-muted small mb-0" id="admin-help">Use the default credentials <span class="fw-semibold">admin / admin123</span> to test adding and editing patterns locally.</p>
@@ -114,11 +127,13 @@ exports.handler = async () => {
           </div>
           <div class="col-md-3">
             <label class="form-label">Type</label>
-            <input class="form-control" id="type" name="type" type="text" placeholder="Exterior / Interior" required>
+            <select class="form-select" id="type" name="type" required></select>
+            <input class="form-control mt-2 d-none" id="custom-type" name="custom-type" type="text" placeholder="Custom type">
           </div>
           <div class="col-md-3">
             <label class="form-label">Brand</label>
-            <input class="form-control" id="brand" name="brand" type="text" required>
+            <input class="form-control" id="brand" name="brand" type="text" list="brand-options" placeholder="Select or type a brand" required>
+            <datalist id="brand-options"></datalist>
           </div>
           <div class="col-md-2">
             <label class="form-label">Year</label>
@@ -196,6 +211,7 @@ exports.handler = async () => {
 
     <script>
       const patterns = ${JSON.stringify(patterns)};
+      const brandOptions = ${JSON.stringify(brandOptions)};
       let adminLogged = false;
       let uploads = {};
 
@@ -207,12 +223,62 @@ exports.handler = async () => {
         }
       }
 
+      function populateBrandOptions() {
+        const datalist = document.getElementById('brand-options');
+        datalist.innerHTML = '';
+        brandOptions.forEach((brand) => {
+          const opt = document.createElement('option');
+          opt.value = brand;
+          datalist.appendChild(opt);
+        });
+      }
+
       function saveUploads() {
         localStorage.setItem('patternUploads', JSON.stringify(uploads));
       }
 
       function unique(values) {
         return Array.from(new Set(values.filter(Boolean))).sort();
+      }
+
+      function typeCounts() {
+        return patterns.reduce((acc, item) => {
+          const key = item.type || 'Other';
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {});
+      }
+
+      function populateTypeFormOptions(selectedValue = '') {
+        const select = document.getElementById('type');
+        const counts = typeCounts();
+        const sortedTypes = Object.keys(counts).sort();
+        select.innerHTML = '';
+
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Select a type';
+        select.appendChild(placeholder);
+
+        sortedTypes.forEach((type) => {
+          const opt = document.createElement('option');
+          opt.value = type;
+          opt.textContent = `${type} (${counts[type]})`;
+          if (type === selectedValue) opt.selected = true;
+          select.appendChild(opt);
+        });
+
+        const otherOpt = document.createElement('option');
+        otherOpt.value = 'other';
+        otherOpt.textContent = 'Other (custom)';
+        select.appendChild(otherOpt);
+
+        if (selectedValue && !sortedTypes.includes(selectedValue)) {
+          select.value = 'other';
+          const customField = document.getElementById('custom-type');
+          customField.classList.remove('d-none');
+          customField.value = selectedValue;
+        }
       }
 
       function applyFilters() {
@@ -338,6 +404,7 @@ exports.handler = async () => {
         document.getElementById('open-form-btn').disabled = !isLoggedIn;
         document.getElementById('pattern-form').classList.toggle('d-none', !isLoggedIn);
         document.getElementById('login-form').classList.toggle('d-none', isLoggedIn);
+        document.getElementById('admin-info').classList.toggle('d-none', !isLoggedIn);
         document.getElementById('upload-note').classList.toggle('d-none', !isLoggedIn);
         document.querySelector('.admin-panel').classList.toggle('border-success', isLoggedIn);
         document.querySelector('.admin-panel').classList.toggle('border', isLoggedIn);
@@ -346,12 +413,14 @@ exports.handler = async () => {
       }
 
       document.getElementById('login-btn').addEventListener('click', () => {
+        document.getElementById('admin-info').classList.remove('d-none');
         document.getElementById('login-form').classList.toggle('d-none');
       });
 
       document.getElementById('logout-btn').addEventListener('click', () => {
         toggleAdminUI(false);
-        document.getElementById('login-form').classList.remove('d-none');
+        document.getElementById('login-form').classList.add('d-none');
+        document.getElementById('admin-info').classList.add('d-none');
         resetForm();
       });
 
@@ -392,12 +461,24 @@ exports.handler = async () => {
         reader.readAsDataURL(file);
       });
 
+      document.getElementById('type').addEventListener('change', (event) => {
+        const customField = document.getElementById('custom-type');
+        const isOther = event.target.value === 'other';
+        customField.classList.toggle('d-none', !isOther);
+        if (!isOther) {
+          customField.value = '';
+        }
+      });
+
       function resetForm() {
         document.getElementById('editing-index').value = '';
         document.getElementById('image_path').value = '';
         document.getElementById('image-preview-wrap').classList.add('d-none');
         document.getElementById('pattern-form').reset();
+        document.getElementById('custom-type').classList.add('d-none');
+        document.getElementById('custom-type').value = '';
         document.getElementById('save-pattern-btn').textContent = 'Save pattern';
+        populateTypeFormOptions();
       }
 
       function showPreview(path) {
@@ -415,7 +496,7 @@ exports.handler = async () => {
         document.getElementById('editing-index').value = String(index);
         document.getElementById('code').value = item.code;
         document.getElementById('name').value = item.name;
-        document.getElementById('type').value = item.type;
+        populateTypeFormOptions(item.type);
         document.getElementById('brand').value = item.brand;
         document.getElementById('year').value = item.year;
         document.getElementById('model').value = item.model;
@@ -432,11 +513,18 @@ exports.handler = async () => {
       document.getElementById('pattern-form').addEventListener('submit', (event) => {
         event.preventDefault();
         const existingPath = document.getElementById('image_path').value.trim();
+        const typeField = document.getElementById('type');
+        const customTypeField = document.getElementById('custom-type');
+        const resolvedType = typeField.value === 'other' ? customTypeField.value.trim() : typeField.value.trim();
+        if (!resolvedType) {
+          alert('Please select or enter a type.');
+          return;
+        }
         const newItem = {
           code: document.getElementById('code').value.trim(),
           name: document.getElementById('name').value.trim(),
           description: document.getElementById('description').value.trim(),
-          type: document.getElementById('type').value.trim(),
+          type: resolvedType,
           brand: document.getElementById('brand').value.trim(),
           year: document.getElementById('year').value.trim(),
           model: document.getElementById('model').value.trim(),
@@ -460,6 +548,8 @@ exports.handler = async () => {
 
       // Initialize
       loadUploads();
+      populateBrandOptions();
+      populateTypeFormOptions();
       refreshDropdowns(patterns);
       renderCards(patterns);
     </script>
