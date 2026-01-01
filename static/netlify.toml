@@ -3,19 +3,4 @@
   publish = "."
 
 [functions]
-  included_files = ["../templates/**", "../static/**", "../patterns.db"]
-
-[[redirects]]
-  from = "/"
-  to = "/Homepage.html"
-  status = 200
-
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/app/:splat"
-  status = 200
+  included_files = ["../templates/**", "../static/**"]

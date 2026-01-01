@@ -3,4 +3,4 @@
   publish = "."
 
 [functions]
-  included_files = ["app.py", "templates/**", "static/**"]
+  included_files = ["templates/**", "static/**"]
