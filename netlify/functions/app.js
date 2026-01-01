@@ -9,7 +9,8 @@ exports.handler = async () => {
       year: "2020",
       model: "A4",
       trim: "Premium",
-      image_url: "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
+      image_url:
+        "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
       tags: "wrap,sedan,paint-protection",
     },
     {
@@ -21,7 +22,8 @@ exports.handler = async () => {
       year: "2021",
       model: "Q5",
       trim: "Sport",
-      image_url: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=60",
+      image_url:
+        "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=60",
       tags: "dashboard,suv,luxury",
     },
     {
@@ -33,7 +35,8 @@ exports.handler = async () => {
       year: "2022",
       model: "X5",
       trim: "xDrive",
-      image_url: "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
+      image_url:
+        "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
       tags: "suv,ppf,front-kit",
     },
     {
@@ -45,22 +48,105 @@ exports.handler = async () => {
       year: "2019",
       model: "Model 3",
       trim: "Long Range",
-      image_url: "https://images.unsplash.com/photo-1511391038130-89ba48c93fd3?auto=format&fit=crop&w=800&q=60",
+      image_url:
+        "https://images.unsplash.com/photo-1511391038130-89ba48c93fd3?auto=format&fit=crop&w=800&q=60",
       tags: "ev,console,sedan",
     },
   ];
 
   const brandOptions = [
-    "Abarth", "Acura", "Alfa Romeo", "Alpina", "Aston Martin", "Audi", "Bentley", "BMW", "Bugatti", "Buick",
-    "BYD", "Cadillac", "Changan", "Chery", "Chevrolet", "Chrysler", "Citroën", "Cupra", "Dacia", "Daewoo",
-    "Daihatsu", "Datsun", "Dodge", "DS Automobiles", "Ferrari", "Fiat", "Fisker", "Ford", "Genesis", "GMC",
-    "Great Wall", "Haval", "Hino", "Holden", "Honda", "Hummer", "Hyundai", "Infiniti", "Isuzu", "Jaguar",
-    "Jeep", "Kia", "Koenigsegg", "Lada", "Lamborghini", "Lancia", "Land Rover", "Lexus", "Lincoln", "Lotus",
-    "Lucid", "Maserati", "Maybach", "Mazda", "McLaren", "Mercedes-Benz", "Mercury", "MG", "Mini", "Mitsubishi",
-    "Morgan", "NIO", "Nissan", "Opel", "Pagani", "Peugeot", "Polestar", "Pontiac", "Porsche", "Proton",
-    "Ram", "Renault", "Rivian", "Rolls-Royce", "Saab", "Saleen", "Saturn", "Scion", "Seat", "Škoda",
-    "Smart", "SsangYong", "Subaru", "Suzuki", "Tata", "Tesla", "Toyota", "Vauxhall", "Volkswagen", "Volvo",
-    "Wuling", "Zotye"
+    "Abarth",
+    "Acura",
+    "Alfa Romeo",
+    "Alpina",
+    "Aston Martin",
+    "Audi",
+    "Bentley",
+    "BMW",
+    "Bugatti",
+    "Buick",
+    "BYD",
+    "Cadillac",
+    "Changan",
+    "Chery",
+    "Chevrolet",
+    "Chrysler",
+    "Citroën",
+    "Cupra",
+    "Dacia",
+    "Daewoo",
+    "Daihatsu",
+    "Datsun",
+    "Dodge",
+    "DS Automobiles",
+    "Ferrari",
+    "Fiat",
+    "Fisker",
+    "Ford",
+    "Genesis",
+    "GMC",
+    "Great Wall",
+    "Haval",
+    "Hino",
+    "Holden",
+    "Honda",
+    "Hummer",
+    "Hyundai",
+    "Infiniti",
+    "Isuzu",
+    "Jaguar",
+    "Jeep",
+    "Kia",
+    "Koenigsegg",
+    "Lada",
+    "Lamborghini",
+    "Lancia",
+    "Land Rover",
+    "Lexus",
+    "Lincoln",
+    "Lotus",
+    "Lucid",
+    "Maserati",
+    "Maybach",
+    "Mazda",
+    "McLaren",
+    "Mercedes-Benz",
+    "Mercury",
+    "MG",
+    "Mini",
+    "Mitsubishi",
+    "Morgan",
+    "NIO",
+    "Nissan",
+    "Opel",
+    "Pagani",
+    "Peugeot",
+    "Polestar",
+    "Pontiac",
+    "Porsche",
+    "Proton",
+    "Ram",
+    "Renault",
+    "Rivian",
+    "Rolls-Royce",
+    "Saab",
+    "Saleen",
+    "Saturn",
+    "Scion",
+    "Seat",
+    "Škoda",
+    "Smart",
+    "SsangYong",
+    "Subaru",
+    "Suzuki",
+    "Tata",
+    "Tesla",
+    "Toyota",
+    "Vauxhall",
+    "Volkswagen",
+    "Volvo",
+    "Wuling",
+    "Zotye",
   ];
 
   const html = `<!DOCTYPE html>
@@ -263,7 +349,7 @@ exports.handler = async () => {
         sortedTypes.forEach((type) => {
           const opt = document.createElement('option');
           opt.value = type;
-          opt.textContent = `${type} (${counts[type]})`;
+          opt.textContent = type + ' (' + counts[type] + ')';
           if (type === selectedValue) opt.selected = true;
           select.appendChild(opt);
         });
@@ -290,7 +376,8 @@ exports.handler = async () => {
         const trim = document.getElementById('trim-select').value;
 
         const filtered = patterns.filter((p) => {
-          const matchSearch = !search ||
+          const matchSearch =
+            !search ||
             p.name.toLowerCase().includes(search) ||
             p.description.toLowerCase().includes(search) ||
             (p.tags || '').toLowerCase().includes(search);
@@ -321,7 +408,10 @@ exports.handler = async () => {
           return;
         }
         list.forEach((p) => {
-          const tags = (p.tags || '').split(',').map((t) => t.trim()).filter(Boolean);
+          const tags = (p.tags || '')
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean);
           const tagHtml = tags
             .map((t) => '<span class="badge text-bg-light">' + t + '</span>')
             .join('');
@@ -339,7 +429,11 @@ exports.handler = async () => {
             '<p class="text-muted small">' + p.description + '</p>' +
             '<p class="mb-1 fw-semibold">' + p.brand + ' • ' + p.year + ' • ' + p.model + ' • ' + p.trim + '</p>' +
             '<div class="mt-auto d-flex flex-wrap gap-2">' + tagHtml + '</div>' +
-            (adminLogged ? '<div class="mt-3 d-flex justify-content-end"><button class="btn btn-sm btn-outline-primary" data-code="' + p.code + '" data-action="edit">Edit</button></div>' : '') +
+            (adminLogged
+              ? '<div class="mt-3 d-flex justify-content-end"><button class="btn btn-sm btn-outline-primary" data-code="' +
+                p.code +
+                '" data-action="edit">Edit</button></div>'
+              : '') +
             '</div>' +
             '</div>';
           container.appendChild(card);
@@ -408,7 +502,9 @@ exports.handler = async () => {
         document.getElementById('upload-note').classList.toggle('d-none', !isLoggedIn);
         document.querySelector('.admin-panel').classList.toggle('border-success', isLoggedIn);
         document.querySelector('.admin-panel').classList.toggle('border', isLoggedIn);
-        document.getElementById('admin-help').textContent = isLoggedIn ? 'Admin mode active — you can add new patterns or edit any card.' : 'Use the default credentials admin / admin123 to test adding and editing patterns locally.';
+        document.getElementById('admin-help').textContent = isLoggedIn
+          ? 'Admin mode active — you can add new patterns or edit any card.'
+          : 'Use the default credentials admin / admin123 to test adding and editing patterns locally.';
         renderCards(patterns);
       }
 
@@ -487,7 +583,9 @@ exports.handler = async () => {
           return;
         }
         document.getElementById('image-preview').src = resolveImageSrc(path);
-        document.getElementById('image-path-label').textContent = path.startsWith('local-uploads/') ? 'Saved locally as ' + path : path;
+        document.getElementById('image-path-label').textContent = path.startsWith('local-uploads/')
+          ? 'Saved locally as ' + path
+          : path;
         document.getElementById('image-preview-wrap').classList.remove('d-none');
       }
 
