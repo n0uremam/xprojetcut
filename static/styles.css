@@ -20,3 +20,7 @@ body {
 .navbar-brand {
   letter-spacing: -0.3px;
 }
+
+.admin-panel.border-success {
+  box-shadow: 0 0 0 1px #198754 inset;
+}
