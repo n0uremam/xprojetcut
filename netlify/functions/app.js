@@ -176,8 +176,8 @@ exports.handler = async () => {
             <p class="text-uppercase text-primary fw-semibold small mb-1">Admin tools</p>
             <h2 class="h5 mb-0">Sign in to manage patterns</h2>
           </div>
-          <div class="text-end">
-            <button class="btn btn-primary" id="open-form-btn" type="button" disabled>New pattern</button>
+          <div class="text-end d-none" id="new-pattern-wrap">
+            <button class="btn btn-primary" id="open-form-btn" type="button">New pattern</button>
           </div>
         </div>
 
@@ -205,10 +205,6 @@ exports.handler = async () => {
           <div class="col-md-3">
             <label class="form-label">Code</label>
             <input class="form-control" id="code" name="code" type="text" required>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Name</label>
-            <input class="form-control" id="name" name="name" type="text" required>
           </div>
           <div class="col-md-3">
             <label class="form-label">Type</label>
@@ -418,20 +414,21 @@ exports.handler = async () => {
           card.className = 'col-md-4';
           card.innerHTML =
             '<div class="card h-100 shadow-sm border-0">' +
-            '<img src="' + resolveImageSrc(p.image_url) + '" class="card-img-top" alt="' + p.name + '">' +
+            '<img src="' + resolveImageSrc(p.image_url) + '" class="card-img-top" alt="' + p.brand + ' ' + p.model + '">' +
             '<div class="card-body d-flex flex-column">' +
             '<div class="d-flex justify-content-between align-items-start mb-2">' +
             '<span class="badge bg-primary">' + p.code + '</span>' +
             '<small class="text-muted">' + p.type + '</small>' +
             '</div>' +
-            '<h5 class="card-title mb-1">' + p.name + '</h5>' +
+            '<h5 class="card-title mb-1">' + p.brand + ' ' + p.model + '</h5>' +
             '<p class="text-muted small">' + p.description + '</p>' +
             '<p class="mb-1 fw-semibold">' + p.brand + ' • ' + p.year + ' • ' + p.model + ' • ' + p.trim + '</p>' +
             '<div class="mt-auto d-flex flex-wrap gap-2">' + tagHtml + '</div>' +
             (adminLogged
-              ? '<div class="mt-3 d-flex justify-content-end"><button class="btn btn-sm btn-outline-primary" data-code="' +
-                p.code +
-                '" data-action="edit">Edit</button></div>'
+              ? '<div class="mt-3 d-flex justify-content-end gap-2">' +
+                '<button class="btn btn-sm btn-outline-danger" data-code="' + p.code + '" data-action="delete">Delete</button>' +
+                '<button class="btn btn-sm btn-outline-primary" data-code="' + p.code + '" data-action="edit">Edit</button>' +
+                '</div>'
               : '') +
             '</div>' +
             '</div>';
@@ -445,6 +442,17 @@ exports.handler = async () => {
               const index = patterns.findIndex((item) => item.code === code);
               if (index >= 0) {
                 startEditing(index);
+              }
+            });
+          });
+          container.querySelectorAll('[data-action="delete"]').forEach((btn) => {
+            btn.addEventListener('click', (event) => {
+              const code = event.target.getAttribute('data-code');
+              const index = patterns.findIndex((item) => item.code === code);
+              if (index >= 0) {
+                patterns.splice(index, 1);
+                refreshDropdowns(patterns);
+                applyFilters();
               }
             });
           });
@@ -494,7 +502,7 @@ exports.handler = async () => {
         adminLogged = isLoggedIn;
         document.getElementById('login-btn').classList.toggle('d-none', isLoggedIn);
         document.getElementById('logout-btn').classList.toggle('d-none', !isLoggedIn);
-        document.getElementById('open-form-btn').disabled = !isLoggedIn;
+        document.getElementById('new-pattern-wrap').classList.toggle('d-none', !isLoggedIn);
         document.getElementById('pattern-form').classList.toggle('d-none', !isLoggedIn);
         document.getElementById('login-form').classList.toggle('d-none', isLoggedIn);
         document.getElementById('admin-info').classList.toggle('d-none', isLoggedIn);
@@ -589,7 +597,6 @@ exports.handler = async () => {
         const item = patterns[index];
         document.getElementById('editing-index').value = String(index);
         document.getElementById('code').value = item.code;
-        document.getElementById('name').value = item.name;
         populateTypeFormOptions(item.type);
         document.getElementById('brand').value = item.brand;
         document.getElementById('year').value = item.year;
@@ -614,9 +621,14 @@ exports.handler = async () => {
           alert('Please select or enter a type.');
           return;
         }
+        const derivedName =
+          document.getElementById('brand').value.trim() +
+          ' ' +
+          document.getElementById('model').value.trim() +
+          (resolvedType ? ' (' + resolvedType + ')' : '');
         const newItem = {
           code: document.getElementById('code').value.trim(),
-          name: document.getElementById('name').value.trim(),
+          name: derivedName.trim(),
           description: document.getElementById('description').value.trim(),
           type: resolvedType,
           brand: document.getElementById('brand').value.trim(),
