@@ -26,7 +26,7 @@ If the last URL 404s, Netlify did not find `netlify/functions/app.js` during the
 
 ## Optional Neon database
 
-The function can persist patterns to a Neon/Postgres database using [`@netlify/neon`](https://github.com/netlify/neon-client). To enable it:
+The function can persist patterns to a Neon/Postgres database using [`@netlify/neon`](https://github.com/netlify/neon-client). The dependency is pinned to a published release (`^0.4.0`) so Netlify installs succeed. To enable it:
 
 1. Set an environment variable in Netlify (or locally) named `NETLIFY_DATABASE_URL` with your Neon connection string.
 2. Redeploy. The function will create a `patterns` table automatically and seed a few sample rows on first run.
