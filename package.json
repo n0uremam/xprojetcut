@@ -1,0 +1,16 @@
+{
+  "name": "xprojetcut",
+  "version": "1.0.0",
+  "description": "Netlify Functions only run JavaScript/TypeScript/Go. This repository ships a minimal Node.js function (`netlify/functions/app.js`) plus a loading page that forwards users to the function URL so you can confirm the deployment works end-to-end.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@netlify/neon": "^0.6.0"
+  }
+}

@@ -1,154 +1,206 @@
-exports.handler = async () => {
-  const patterns = [
-    {
-      code: "AUD-A4-EXT-20",
-      name: "Audi A4 Exterior Wrap",
-      description: "Full-body exterior pattern sized for 2020 Audi A4.",
-      type: "Exterior",
-      brand: "Audi",
-      year: "2020",
-      model: "A4",
-      trim: "Premium",
-      image_url:
-        "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
-      tags: "wrap,sedan,paint-protection",
-    },
-    {
-      code: "AUD-Q5-INT-21",
-      name: "Audi Q5 Interior Kit",
-      description: "Dashboard and console pattern set for 2021 Audi Q5.",
-      type: "Interior",
-      brand: "Audi",
-      year: "2021",
-      model: "Q5",
-      trim: "Sport",
-      image_url:
-        "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=60",
-      tags: "dashboard,suv,luxury",
-    },
-    {
-      code: "BMW-X5-EXT-22",
-      name: "BMW X5 Exterior Protection",
-      description: "Front-end pattern kit for 2022 BMW X5.",
-      type: "Exterior",
-      brand: "BMW",
-      year: "2022",
-      model: "X5",
-      trim: "xDrive",
-      image_url:
-        "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
-      tags: "suv,ppf,front-kit",
-    },
-    {
-      code: "TES-3-INT-19",
-      name: "Tesla Model 3 Interior",
-      description: "Center console and dash overlay for Model 3.",
-      type: "Interior",
-      brand: "Tesla",
-      year: "2019",
-      model: "Model 3",
-      trim: "Long Range",
-      image_url:
-        "https://images.unsplash.com/photo-1511391038130-89ba48c93fd3?auto=format&fit=crop&w=800&q=60",
-      tags: "ev,console,sedan",
-    },
-  ];
+const { neon } = require('@netlify/neon');
 
-  const brandOptions = [
-    "Abarth",
-    "Acura",
-    "Alfa Romeo",
-    "Alpina",
-    "Aston Martin",
-    "Audi",
-    "Bentley",
-    "BMW",
-    "Bugatti",
-    "Buick",
-    "BYD",
-    "Cadillac",
-    "Changan",
-    "Chery",
-    "Chevrolet",
-    "Chrysler",
-    "Citroën",
-    "Cupra",
-    "Dacia",
-    "Daewoo",
-    "Daihatsu",
-    "Datsun",
-    "Dodge",
-    "DS Automobiles",
-    "Ferrari",
-    "Fiat",
-    "Fisker",
-    "Ford",
-    "Genesis",
-    "GMC",
-    "Great Wall",
-    "Haval",
-    "Hino",
-    "Holden",
-    "Honda",
-    "Hummer",
-    "Hyundai",
-    "Infiniti",
-    "Isuzu",
-    "Jaguar",
-    "Jeep",
-    "Kia",
-    "Koenigsegg",
-    "Lada",
-    "Lamborghini",
-    "Lancia",
-    "Land Rover",
-    "Lexus",
-    "Lincoln",
-    "Lotus",
-    "Lucid",
-    "Maserati",
-    "Maybach",
-    "Mazda",
-    "McLaren",
-    "Mercedes-Benz",
-    "Mercury",
-    "MG",
-    "Mini",
-    "Mitsubishi",
-    "Morgan",
-    "NIO",
-    "Nissan",
-    "Opel",
-    "Pagani",
-    "Peugeot",
-    "Polestar",
-    "Pontiac",
-    "Porsche",
-    "Proton",
-    "Ram",
-    "Renault",
-    "Rivian",
-    "Rolls-Royce",
-    "Saab",
-    "Saleen",
-    "Saturn",
-    "Scion",
-    "Seat",
-    "Škoda",
-    "Smart",
-    "SsangYong",
-    "Subaru",
-    "Suzuki",
-    "Tata",
-    "Tesla",
-    "Toyota",
-    "Vauxhall",
-    "Volkswagen",
-    "Volvo",
-    "Wuling",
-    "Zotye",
-  ];
+const seedPatterns = [
+  {
+    code: "AUD-A4-EXT-20",
+    name: "Audi A4 Exterior Wrap",
+    description: "Full-body exterior pattern sized for 2020 Audi A4.",
+    type: "Exterior",
+    brand: "Audi",
+    year: "2020",
+    model: "A4",
+    trim: "Premium",
+    image_url:
+      "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
+    tags: "wrap,sedan,paint-protection",
+  },
+  {
+    code: "AUD-Q5-INT-21",
+    name: "Audi Q5 Interior Kit",
+    description: "Dashboard and console pattern set for 2021 Audi Q5.",
+    type: "Interior",
+    brand: "Audi",
+    year: "2021",
+    model: "Q5",
+    trim: "Sport",
+    image_url:
+      "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=60",
+    tags: "dashboard,suv,luxury",
+  },
+  {
+    code: "BMW-X5-EXT-22",
+    name: "BMW X5 Exterior Protection",
+    description: "Front-end pattern kit for 2022 BMW X5.",
+    type: "Exterior",
+    brand: "BMW",
+    year: "2022",
+    model: "X5",
+    trim: "xDrive",
+    image_url:
+      "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
+    tags: "suv,ppf,front-kit",
+  },
+  {
+    code: "TES-3-INT-19",
+    name: "Tesla Model 3 Interior",
+    description: "Center console and dash overlay for Model 3.",
+    type: "Interior",
+    brand: "Tesla",
+    year: "2019",
+    model: "Model 3",
+    trim: "Long Range",
+    image_url:
+      "https://images.unsplash.com/photo-1511391038130-89ba48c93fd3?auto=format&fit=crop&w=800&q=60",
+    tags: "ev,console,sedan",
+  },
+];
 
+const brandOptions = [
+  "Abarth",
+  "Acura",
+  "Alfa Romeo",
+  "Alpina",
+  "Aston Martin",
+  "Audi",
+  "Bentley",
+  "BMW",
+  "Bugatti",
+  "Buick",
+  "BYD",
+  "Cadillac",
+  "Changan",
+  "Chery",
+  "Chevrolet",
+  "Chrysler",
+  "Citroën",
+  "Cupra",
+  "Dacia",
+  "Daewoo",
+  "Daihatsu",
+  "Datsun",
+  "Dodge",
+  "DS Automobiles",
+  "Ferrari",
+  "Fiat",
+  "Fisker",
+  "Ford",
+  "Genesis",
+  "GMC",
+  "Great Wall",
+  "Haval",
+  "Hino",
+  "Holden",
+  "Honda",
+  "Hummer",
+  "Hyundai",
+  "Infiniti",
+  "Isuzu",
+  "Jaguar",
+  "Jeep",
+  "Kia",
+  "Koenigsegg",
+  "Lada",
+  "Lamborghini",
+  "Lancia",
+  "Land Rover",
+  "Lexus",
+  "Lincoln",
+  "Lotus",
+  "Lucid",
+  "Maserati",
+  "Maybach",
+  "Mazda",
+  "McLaren",
+  "Mercedes-Benz",
+  "Mercury",
+  "MG",
+  "Mini",
+  "Mitsubishi",
+  "Morgan",
+  "NIO",
+  "Nissan",
+  "Opel",
+  "Pagani",
+  "Peugeot",
+  "Polestar",
+  "Pontiac",
+  "Porsche",
+  "Proton",
+  "Ram",
+  "Renault",
+  "Rivian",
+  "Rolls-Royce",
+  "Saab",
+  "Saleen",
+  "Saturn",
+  "Scion",
+  "Seat",
+  "Škoda",
+  "Smart",
+  "SsangYong",
+  "Subaru",
+  "Suzuki",
+  "Tata",
+  "Tesla",
+  "Toyota",
+  "Vauxhall",
+  "Volkswagen",
+  "Volvo",
+  "Wuling",
+  "Zotye",
+];
+
+let memoryStore = [...seedPatterns];
+
+const jsonHeaders = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+};
+
+const corsHeaders = {
+  ...jsonHeaders,
+  "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+async function getSqlClient() {
+  if (!process.env.NETLIFY_DATABASE_URL) return null;
+  try {
+    return neon(process.env.NETLIFY_DATABASE_URL);
+  } catch (err) {
+    console.error("Failed to create Neon client", err);
+    return null;
+  }
+}
+
+async function ensureTable(sql) {
+  await sql`CREATE TABLE IF NOT EXISTS patterns (
+    code text primary key,
+    name text not null,
+    description text,
+    type text,
+    brand text,
+    year text,
+    model text,
+    trim text,
+    image_url text,
+    tags text,
+    created_at timestamptz default now()
+  )`;
+}
+
+async function seedDefaults(sql) {
+  const [{ count }] = await sql`SELECT COUNT(*)::int AS count FROM patterns`;
+  if (count > 0) return;
+  const inserts = seedPatterns.map((p) =>
+    sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, tags)
+        VALUES (${p.code}, ${p.name}, ${p.description}, ${p.type}, ${p.brand}, ${p.year}, ${p.model}, ${p.trim}, ${p.image_url}, ${p.tags})
+        ON CONFLICT (code) DO NOTHING`
+  );
+  await Promise.all(inserts);
+}
+
+function renderPage() {
   const html = `<!DOCTYPE html>
   <html lang="en">
   <head>
@@ -291,10 +343,13 @@ exports.handler = async () => {
     </main>
 
     <script>
-      const patterns = ${JSON.stringify(patterns)};
+      const seedPatterns = ${JSON.stringify(seedPatterns)};
       const brandOptions = ${JSON.stringify(brandOptions)};
+      const patternsEndpoint = '/.netlify/functions/app/api/patterns';
       let adminLogged = false;
       let uploads = {};
+      let patterns = seedPatterns.slice();
+      let apiAvailable = false;
 
       function loadUploads() {
         try {
@@ -328,6 +383,46 @@ exports.handler = async () => {
           acc[key] = (acc[key] || 0) + 1;
           return acc;
         }, {});
+      }
+
+      async function fetchPatterns() {
+        try {
+          const res = await fetch(patternsEndpoint, { headers: { Accept: 'application/json' } });
+          if (!res.ok) throw new Error('Failed to load patterns');
+          const data = await res.json();
+          if (Array.isArray(data.patterns)) {
+            patterns = data.patterns.map((p) => ({ ...p, tags: p.tags || '' }));
+            apiAvailable = true;
+          }
+        } catch (err) {
+          console.warn('Falling back to local patterns', err);
+          patterns = seedPatterns.slice();
+          apiAvailable = false;
+        }
+        refreshDropdowns(patterns);
+        renderCards(patterns);
+      }
+
+      async function persistPattern(item) {
+        if (!apiAvailable) return false;
+        const res = await fetch(patternsEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item),
+        });
+        if (!res.ok) throw new Error('Save failed');
+        return true;
+      }
+
+      async function removePattern(code) {
+        if (!apiAvailable) return false;
+        const res = await fetch(patternsEndpoint, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        });
+        if (!res.ok) throw new Error('Delete failed');
+        return true;
       }
 
       function populateTypeFormOptions(selectedValue = '') {
@@ -446,13 +541,22 @@ exports.handler = async () => {
             });
           });
           container.querySelectorAll('[data-action="delete"]').forEach((btn) => {
-            btn.addEventListener('click', (event) => {
+            btn.addEventListener('click', async (event) => {
               const code = event.target.getAttribute('data-code');
               const index = patterns.findIndex((item) => item.code === code);
               if (index >= 0) {
-                patterns.splice(index, 1);
-                refreshDropdowns(patterns);
-                applyFilters();
+                try {
+                  if (apiAvailable) {
+                    await removePattern(code);
+                    await fetchPatterns();
+                  } else {
+                    patterns.splice(index, 1);
+                    refreshDropdowns(patterns);
+                    applyFilters();
+                  }
+                } catch (err) {
+                  alert('Unable to delete pattern: ' + err.message);
+                }
               }
             });
           });
@@ -475,7 +579,7 @@ exports.handler = async () => {
         fillSelect(typeSelect, allTypes, 'All types');
         fillSelect(brandSelect, unique(typeFiltered.map((p) => p.brand)), 'All brands');
         fillSelect(yearSelect, unique(brandFiltered.map((p) => p.year)), 'All years');
-        fillSelect(modelSelect, unique(yearFiltered.map((p) => p.model)), 'All models');
+        fillSelect(modelSelect, unique(modelFiltered.map((p) => p.model)), 'All models');
         fillSelect(trimSelect, unique(modelFiltered.map((p) => p.trim)), 'All trims');
       }
 
@@ -519,8 +623,6 @@ exports.handler = async () => {
 
       document.getElementById('logout-btn').addEventListener('click', () => {
         toggleAdminUI(false);
-        document.getElementById('login-form').classList.add('d-none');
-        document.getElementById('admin-info').classList.add('d-none');
         resetForm();
       });
 
@@ -528,18 +630,18 @@ exports.handler = async () => {
         event.preventDefault();
         const username = document.getElementById('login-username').value.trim();
         const password = document.getElementById('login-password').value.trim();
-        const valid = username === 'admin' && password === 'admin123';
-        if (valid) {
+        if (username === 'admin' && password === 'admin123') {
           toggleAdminUI(true);
-          document.getElementById('login-form').classList.add('d-none');
+          resetForm();
         } else {
-          alert('Invalid credentials.');
+          alert('Invalid credentials');
         }
       });
 
       document.getElementById('open-form-btn').addEventListener('click', () => {
-        document.getElementById('pattern-form').classList.remove('d-none');
         resetForm();
+        document.getElementById('pattern-form').classList.remove('d-none');
+        document.getElementById('pattern-form').scrollIntoView({ behavior: 'smooth' });
       });
 
       document.getElementById('cancel-edit-btn').addEventListener('click', () => {
@@ -611,7 +713,7 @@ exports.handler = async () => {
         document.getElementById('pattern-form').scrollIntoView({ behavior: 'smooth' });
       }
 
-      document.getElementById('pattern-form').addEventListener('submit', (event) => {
+      document.getElementById('pattern-form').addEventListener('submit', async (event) => {
         event.preventDefault();
         const existingPath = document.getElementById('image_path').value.trim();
         const typeField = document.getElementById('type');
@@ -640,16 +742,24 @@ exports.handler = async () => {
         };
 
         const editIndexValue = document.getElementById('editing-index').value;
-        if (editIndexValue !== '') {
-          const idx = parseInt(editIndexValue, 10);
-          patterns[idx] = newItem;
-        } else {
-          patterns.push(newItem);
+        try {
+          if (apiAvailable) {
+            await persistPattern(newItem);
+            await fetchPatterns();
+          } else {
+            if (editIndexValue !== '') {
+              const idx = parseInt(editIndexValue, 10);
+              patterns[idx] = newItem;
+            } else {
+              patterns.push(newItem);
+            }
+            refreshDropdowns(patterns);
+            applyFilters();
+          }
+          resetForm();
+        } catch (err) {
+          alert('Unable to save pattern: ' + err.message);
         }
-
-        resetForm();
-        refreshDropdowns(patterns);
-        applyFilters();
       });
 
       // Initialize
@@ -658,13 +768,122 @@ exports.handler = async () => {
       populateTypeFormOptions();
       refreshDropdowns(patterns);
       renderCards(patterns);
+      fetchPatterns();
     </script>
   </body>
   </html>`;
+  return html;
+}
+
+async function handleApi(event) {
+  const sql = await getSqlClient();
+  const method = event.httpMethod || 'GET';
+
+  if (method === 'OPTIONS') {
+    return { statusCode: 200, headers: corsHeaders, body: '' };
+  }
+
+  if (!sql) {
+    if (method === 'GET') {
+      return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ patterns: memoryStore, source: 'memory' }) };
+    }
+    if (method === 'POST') {
+      try {
+        const payload = JSON.parse(event.body || '{}');
+        const updated = memoryStore.filter((item) => item.code !== payload.code);
+        updated.unshift(payload);
+        memoryStore = updated;
+        return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ ok: true, source: 'memory' }) };
+      } catch (err) {
+        return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) };
+      }
+    }
+    if (method === 'DELETE') {
+      try {
+        const payload = JSON.parse(event.body || '{}');
+        memoryStore = memoryStore.filter((item) => item.code !== payload.code);
+        return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ ok: true, source: 'memory' }) };
+      } catch (err) {
+        return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) };
+      }
+    }
+    return { statusCode: 405, headers: jsonHeaders, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+
+  try {
+    await ensureTable(sql);
+    await seedDefaults(sql);
+  } catch (err) {
+    console.error('Unable to prepare database', err);
+    if (method === 'GET') {
+      return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ patterns: memoryStore, source: 'memory' }) };
+    }
+    return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: 'Database not ready' }) };
+  }
+
+  if (method === 'GET') {
+    const rows = await sql`SELECT code, name, description, type, brand, year, model, trim, image_url, tags FROM patterns ORDER BY created_at DESC`;
+    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ patterns: rows, source: 'neon' }) };
+  }
+
+  if (method === 'POST') {
+    let payload;
+    try {
+      payload = JSON.parse(event.body || '{}');
+    } catch (err) {
+      return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) };
+    }
+
+    if (!payload.code || !payload.type || !payload.brand || !payload.model) {
+      return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Missing required fields' }) };
+    }
+
+    const sanitized = {
+      code: String(payload.code),
+      name: String(payload.name || payload.model || 'Pattern'),
+      description: String(payload.description || ''),
+      type: String(payload.type),
+      brand: String(payload.brand),
+      year: String(payload.year || ''),
+      model: String(payload.model),
+      trim: String(payload.trim || ''),
+      image_url: String(payload.image_url || ''),
+      tags: String(payload.tags || ''),
+    };
+
+    const rows = await sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, tags)
+      VALUES (${sanitized.code}, ${sanitized.name}, ${sanitized.description}, ${sanitized.type}, ${sanitized.brand}, ${sanitized.year}, ${sanitized.model}, ${sanitized.trim}, ${sanitized.image_url}, ${sanitized.tags})
+      ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, type = EXCLUDED.type, brand = EXCLUDED.brand, year = EXCLUDED.year, model = EXCLUDED.model, trim = EXCLUDED.trim, image_url = EXCLUDED.image_url, tags = EXCLUDED.tags
+      RETURNING code, name, description, type, brand, year, model, trim, image_url, tags`;
+
+    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ pattern: rows[0], source: 'neon' }) };
+  }
+
+  if (method === 'DELETE') {
+    let payload;
+    try {
+      payload = JSON.parse(event.body || '{}');
+    } catch (err) {
+      return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) };
+    }
+    if (!payload.code) {
+      return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Missing pattern code' }) };
+    }
+    await sql`DELETE FROM patterns WHERE code = ${payload.code}`;
+    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ ok: true, source: 'neon' }) };
+  }
+
+  return { statusCode: 405, headers: jsonHeaders, body: JSON.stringify({ error: 'Method not allowed' }) };
+}
+
+exports.handler = async (event) => {
+  if (event && event.path && event.path.includes('/api/patterns')) {
+    return handleApi(event);
+  }
 
   return {
     statusCode: 200,
     headers: { "Content-Type": "text/html" },
-    body: html,
+    body: renderPage(),
   };
 };
