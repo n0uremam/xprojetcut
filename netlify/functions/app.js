@@ -536,7 +536,7 @@ function renderPage() {
             '<img src="' + resolveImageSrc(p.image_url, p.image_data) + '" class="card-img-top zoomable" alt="' + p.brand + ' ' + p.model + '">' +
             '<div class="card-body d-flex flex-column">' +
             '<div class="d-flex justify-content-between align-items-start mb-2">' +
-            '<span class="badge bg-primary">' + p.code + '</span>' +
+            '<span class="visually-hidden">Pattern code ' + p.code + '</span>' +
             '<small class="text-muted">' + p.type + '</small>' +
             '</div>' +
             '<h5 class="card-title mb-1">' + p.brand + ' ' + p.model + '</h5>' +
