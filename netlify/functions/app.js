@@ -12,6 +12,7 @@ const seedPatterns = [
     trim: "Premium",
     image_url:
       "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
+    image_data: "",
     tags: "wrap,sedan,paint-protection",
   },
   {
@@ -25,6 +26,7 @@ const seedPatterns = [
     trim: "Sport",
     image_url:
       "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=60",
+    image_data: "",
     tags: "dashboard,suv,luxury",
   },
   {
@@ -38,6 +40,7 @@ const seedPatterns = [
     trim: "xDrive",
     image_url:
       "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
+    image_data: "",
     tags: "suv,ppf,front-kit",
   },
   {
@@ -51,6 +54,7 @@ const seedPatterns = [
     trim: "Long Range",
     image_url:
       "https://images.unsplash.com/photo-1511391038130-89ba48c93fd3?auto=format&fit=crop&w=800&q=60",
+    image_data: "",
     tags: "ev,console,sedan",
   },
 ];
@@ -192,17 +196,19 @@ async function ensureTable(sql) {
     model text,
     trim text,
     image_url text,
+    image_data text,
     tags text,
     created_at timestamptz default now()
   )`;
+  await sql`ALTER TABLE patterns ADD COLUMN IF NOT EXISTS image_data text`;
 }
 
 async function seedDefaults(sql) {
   const [{ count }] = await sql`SELECT COUNT(*)::int AS count FROM patterns`;
   if (count > 0) return;
   const inserts = seedPatterns.map((p) =>
-    sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, tags)
-        VALUES (${p.code}, ${p.name}, ${p.description}, ${p.type}, ${p.brand}, ${p.year}, ${p.model}, ${p.trim}, ${p.image_url}, ${p.tags})
+    sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, image_data, tags)
+        VALUES (${p.code}, ${p.name}, ${p.description}, ${p.type}, ${p.brand}, ${p.year}, ${p.model}, ${p.trim}, ${p.image_url}, ${p.image_data}, ${p.tags})
         ON CONFLICT (code) DO NOTHING`
   );
   await Promise.all(inserts);
@@ -255,13 +261,10 @@ function renderPage() {
           </div>
         </form>
 
-        <div class="alert alert-info d-none mt-3" id="upload-note">
-          Uploaded images are stored locally in your browser under <code>local-uploads/</code> and used for preview only.
-        </div>
-
         <form class="row gy-3 mt-3 d-none" id="pattern-form">
           <input type="hidden" id="editing-index" value="">
-          <input type="hidden" id="image_path" value="">
+          <input type="hidden" id="image_data" value="">
+          <input type="hidden" id="image_url" value="">
           <div class="col-md-3">
             <label class="form-label">Code</label>
             <input class="form-control" id="code" name="code" type="text" required>
@@ -293,7 +296,6 @@ function renderPage() {
           <div class="col-md-6">
             <label class="form-label">Upload image</label>
             <input class="form-control" id="image_file" name="image_file" type="file" accept="image/*">
-            <div class="form-text">Files are saved locally inside <code>local-uploads/</code> and used for previews.</div>
             <div class="mt-2 d-none" id="image-preview-wrap">
               <img alt="Preview" id="image-preview" class="img-fluid rounded" style="max-height: 180px; object-fit: cover;">
               <div class="small text-muted mt-1" id="image-path-label"></div>
@@ -369,17 +371,9 @@ function renderPage() {
       const typeOptions = ${JSON.stringify(typeOptions)};
       const patternsEndpoint = '/.netlify/functions/app/api/patterns';
       let adminLogged = false;
-      let uploads = {};
+      let currentImageData = '';
       let patterns = seedPatterns.slice();
       let apiAvailable = false;
-
-      function loadUploads() {
-        try {
-          uploads = JSON.parse(localStorage.getItem('patternUploads') || '{}');
-        } catch (err) {
-          uploads = {};
-        }
-      }
 
       function populateBrandSelect(filter = '', selectedValue = '') {
         const select = document.getElementById('brand');
@@ -407,10 +401,6 @@ function renderPage() {
         }
       }
 
-      function saveUploads() {
-        localStorage.setItem('patternUploads', JSON.stringify(uploads));
-      }
-
       function countBy(list, key) {
         return list.reduce((acc, item) => {
           const val = item[key];
@@ -425,10 +415,10 @@ function renderPage() {
           const res = await fetch(patternsEndpoint, { headers: { Accept: 'application/json' } });
           if (!res.ok) throw new Error('Failed to load patterns');
           const data = await res.json();
-          if (Array.isArray(data.patterns)) {
-            patterns = data.patterns.map((p) => ({ ...p, tags: p.tags || '' }));
-            apiAvailable = true;
-          }
+            if (Array.isArray(data.patterns)) {
+              patterns = data.patterns.map((p) => ({ ...p, tags: p.tags || '', image_data: p.image_data || '' }));
+              apiAvailable = true;
+            }
         } catch (err) {
           console.warn('Falling back to local patterns', err);
           patterns = seedPatterns.slice();
@@ -521,10 +511,8 @@ function renderPage() {
         refreshDropdowns(filtered);
       }
 
-      function resolveImageSrc(src) {
-        if (src && src.startsWith('local-uploads/')) {
-          return uploads[src] || 'https://via.placeholder.com/800x450.png?text=Local+image+missing';
-        }
+      function resolveImageSrc(src, inline) {
+        if (inline) return inline;
         return src || 'https://via.placeholder.com/800x450.png?text=Pattern';
       }
 
@@ -547,7 +535,7 @@ function renderPage() {
           card.className = 'col-md-4';
           card.innerHTML =
             '<div class="card h-100 shadow-sm border-0">' +
-            '<img src="' + resolveImageSrc(p.image_url) + '" class="card-img-top zoomable" alt="' + p.brand + ' ' + p.model + '">' +
+            '<img src="' + resolveImageSrc(p.image_url, p.image_data) + '" class="card-img-top zoomable" alt="' + p.brand + ' ' + p.model + '">' +
             '<div class="card-body d-flex flex-column">' +
             '<div class="d-flex justify-content-between align-items-start mb-2">' +
             '<span class="badge bg-primary">' + p.code + '</span>' +
@@ -662,19 +650,18 @@ function renderPage() {
         zoomModal.show();
       });
 
-      function toggleAdminUI(isLoggedIn) {
-        adminLogged = isLoggedIn;
-        document.getElementById('login-btn').classList.toggle('d-none', isLoggedIn);
-        document.getElementById('logout-btn').classList.toggle('d-none', !isLoggedIn);
-        document.getElementById('new-pattern-wrap').classList.toggle('d-none', !isLoggedIn);
-        document.getElementById('pattern-form').classList.toggle('d-none', !isLoggedIn);
-        document.getElementById('login-form').classList.toggle('d-none', isLoggedIn);
-        document.getElementById('admin-info').classList.toggle('d-none', isLoggedIn);
-        document.getElementById('upload-note').classList.toggle('d-none', !isLoggedIn);
-        document.querySelector('.admin-panel').classList.toggle('border-success', isLoggedIn);
-        document.querySelector('.admin-panel').classList.toggle('border', isLoggedIn);
-        renderCards(patterns);
-      }
+        function toggleAdminUI(isLoggedIn) {
+          adminLogged = isLoggedIn;
+          document.getElementById('login-btn').classList.toggle('d-none', isLoggedIn);
+          document.getElementById('logout-btn').classList.toggle('d-none', !isLoggedIn);
+          document.getElementById('new-pattern-wrap').classList.toggle('d-none', !isLoggedIn);
+          document.getElementById('pattern-form').classList.toggle('d-none', !isLoggedIn);
+          document.getElementById('login-form').classList.toggle('d-none', isLoggedIn);
+          document.getElementById('admin-info').classList.toggle('d-none', isLoggedIn);
+          document.querySelector('.admin-panel').classList.toggle('border-success', isLoggedIn);
+          document.querySelector('.admin-panel').classList.toggle('border', isLoggedIn);
+          renderCards(patterns);
+        }
 
       document.getElementById('login-btn').addEventListener('click', () => {
         document.getElementById('admin-info').classList.remove('d-none');
@@ -713,12 +700,10 @@ function renderPage() {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (loadEvent) => {
-          const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-          const path = 'local-uploads/' + Date.now() + '-' + safeName;
-          uploads[path] = loadEvent.target.result;
-          saveUploads();
-          document.getElementById('image_path').value = path;
-          showPreview(path);
+          currentImageData = loadEvent.target.result;
+          document.getElementById('image_data').value = currentImageData;
+          document.getElementById('image_url').value = '';
+          showPreview('', currentImageData, file.name);
         };
         reader.readAsDataURL(file);
       });
@@ -734,7 +719,9 @@ function renderPage() {
 
       function resetForm() {
         document.getElementById('editing-index').value = '';
-        document.getElementById('image_path').value = '';
+        document.getElementById('image_data').value = '';
+        document.getElementById('image_url').value = '';
+        currentImageData = '';
         document.getElementById('image-preview-wrap').classList.add('d-none');
         document.getElementById('pattern-form').reset();
         document.getElementById('custom-type').classList.add('d-none');
@@ -744,15 +731,14 @@ function renderPage() {
         populateBrandSelect(document.getElementById('brand-search').value || '');
       }
 
-      function showPreview(path) {
-        if (!path) {
+      function showPreview(path, inlineData = '', label = '') {
+        if (!path && !inlineData) {
           document.getElementById('image-preview-wrap').classList.add('d-none');
           return;
         }
-        document.getElementById('image-preview').src = resolveImageSrc(path);
-        document.getElementById('image-path-label').textContent = path.startsWith('local-uploads/')
-          ? 'Saved locally as ' + path
-          : path;
+        document.getElementById('image-preview').src = resolveImageSrc(path, inlineData);
+        const labelText = inlineData ? (label ? 'Uploaded: ' + label : 'Uploaded image') : path;
+        document.getElementById('image-path-label').textContent = labelText;
         document.getElementById('image-preview-wrap').classList.remove('d-none');
       }
 
@@ -765,8 +751,10 @@ function renderPage() {
         document.getElementById('year').value = item.year;
         document.getElementById('model').value = item.model;
         document.getElementById('trim').value = item.trim;
-        document.getElementById('image_path').value = item.image_url || '';
-        showPreview(item.image_url);
+        document.getElementById('image_url').value = item.image_url || '';
+        document.getElementById('image_data').value = item.image_data || '';
+        currentImageData = item.image_data || '';
+        showPreview(item.image_url, item.image_data || '');
         document.getElementById('description').value = item.description;
         document.getElementById('tags').value = item.tags || '';
         document.getElementById('pattern-form').classList.remove('d-none');
@@ -776,7 +764,8 @@ function renderPage() {
 
       document.getElementById('pattern-form').addEventListener('submit', async (event) => {
         event.preventDefault();
-        const existingPath = document.getElementById('image_path').value.trim();
+        const uploadedData = document.getElementById('image_data').value.trim();
+        const existingUrl = document.getElementById('image_url').value.trim();
         const typeField = document.getElementById('type');
         const customTypeField = document.getElementById('custom-type');
         const resolvedType = typeField.value === 'other' ? customTypeField.value.trim() : typeField.value.trim();
@@ -798,7 +787,8 @@ function renderPage() {
           year: document.getElementById('year').value.trim(),
           model: document.getElementById('model').value.trim(),
           trim: document.getElementById('trim').value.trim(),
-          image_url: existingPath || 'https://via.placeholder.com/800x450.png?text=Pattern',
+          image_url: uploadedData ? '' : existingUrl || 'https://via.placeholder.com/800x450.png?text=Pattern',
+          image_data: uploadedData,
           tags: document.getElementById('tags').value.trim(),
         };
 
@@ -824,7 +814,6 @@ function renderPage() {
       });
 
       // Initialize
-      loadUploads();
       populateBrandSelect();
       populateTypeFormOptions();
       refreshDropdowns(patterns);
@@ -883,7 +872,7 @@ async function handleApi(event) {
   }
 
   if (method === 'GET') {
-    const rows = await sql`SELECT code, name, description, type, brand, year, model, trim, image_url, tags FROM patterns ORDER BY created_at DESC`;
+    const rows = await sql`SELECT code, name, description, type, brand, year, model, trim, image_url, image_data, tags FROM patterns ORDER BY created_at DESC`;
     return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ patterns: rows, source: 'neon' }) };
   }
 
@@ -909,13 +898,14 @@ async function handleApi(event) {
       model: String(payload.model),
       trim: String(payload.trim || ''),
       image_url: String(payload.image_url || ''),
+      image_data: String(payload.image_data || ''),
       tags: String(payload.tags || ''),
     };
 
-    const rows = await sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, tags)
-      VALUES (${sanitized.code}, ${sanitized.name}, ${sanitized.description}, ${sanitized.type}, ${sanitized.brand}, ${sanitized.year}, ${sanitized.model}, ${sanitized.trim}, ${sanitized.image_url}, ${sanitized.tags})
-      ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, type = EXCLUDED.type, brand = EXCLUDED.brand, year = EXCLUDED.year, model = EXCLUDED.model, trim = EXCLUDED.trim, image_url = EXCLUDED.image_url, tags = EXCLUDED.tags
-      RETURNING code, name, description, type, brand, year, model, trim, image_url, tags`;
+    const rows = await sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, image_data, tags)
+      VALUES (${sanitized.code}, ${sanitized.name}, ${sanitized.description}, ${sanitized.type}, ${sanitized.brand}, ${sanitized.year}, ${sanitized.model}, ${sanitized.trim}, ${sanitized.image_url}, ${sanitized.image_data}, ${sanitized.tags})
+      ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, type = EXCLUDED.type, brand = EXCLUDED.brand, year = EXCLUDED.year, model = EXCLUDED.model, trim = EXCLUDED.trim, image_url = EXCLUDED.image_url, image_data = EXCLUDED.image_data, tags = EXCLUDED.tags
+      RETURNING code, name, description, type, brand, year, model, trim, image_url, image_data, tags`;
 
     return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ pattern: rows[0], source: 'neon' }) };
   }

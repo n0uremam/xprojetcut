@@ -30,7 +30,7 @@ The function can persist patterns to a Neon/Postgres database using [`@neondatab
 
 1. Set an environment variable in Netlify (or locally) named `NETLIFY_DATABASE_URL` with your Neon connection string.
 2. Redeploy. The function will create a `patterns` table automatically and seed a few sample rows on first run.
-3. When logged in as the admin user (`admin` / `admin123`), new and edited patterns will be upserted to Neon. Deletes also propagate to the table.
+3. When logged in as the admin user (`admin` / `admin123`), new and edited patterns will be upserted to Neon. Uploaded images are stored as Base64 in the `image_data` column alongside `image_url`, and deletes also propagate to the table.
 
 If the environment variable is missing, the app falls back to an in-memory store for the current function instance and still renders the gallery using the bundled seed data.
 
@@ -41,4 +41,4 @@ Netlify does **not** run Python/Flask functions. If you need Flask, host it on a
 
 ## Pattern data folder
 
-The `patterns/` directory is included for storing exported pattern JSON or assets under version control. The in-browser admin tools keep edits locally (via `localStorage`); copy any saved datasets into `patterns/` if you want them tracked in GitHub.
+The `patterns/` directory is included for storing exported pattern JSON or assets under version control. When Neon is configured, admin edits (including uploaded images) are persisted to the database; otherwise the function keeps changes in memory for the current invocation.
