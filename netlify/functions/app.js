@@ -150,6 +150,14 @@ const brandOptions = [
   "Zotye",
 ];
 
+const typeOptions = [
+  "Exterior",
+  "Interior",
+  "Motorcycle",
+  "Transport Trucks",
+  "Window Tint",
+];
+
 let memoryStore = [...seedPatterns];
 
 const jsonHeaders = {
@@ -265,8 +273,10 @@ function renderPage() {
           </div>
           <div class="col-md-3">
             <label class="form-label">Brand</label>
-            <input class="form-control" id="brand" name="brand" type="text" list="brand-options" placeholder="Select or type a brand" required>
-            <datalist id="brand-options"></datalist>
+            <div class="d-flex flex-column gap-2">
+              <input class="form-control" id="brand-search" type="search" placeholder="Search brand">
+              <select class="form-select" id="brand" name="brand" required></select>
+            </div>
           </div>
           <div class="col-md-2">
             <label class="form-label">Year</label>
@@ -342,9 +352,21 @@ function renderPage() {
       <section class="row g-4" id="cards"></section>
     </main>
 
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark border-0">
+          <div class="modal-body p-0">
+            <img id="zoom-image" class="img-fluid w-100" alt="Pattern zoom preview">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       const seedPatterns = ${JSON.stringify(seedPatterns)};
       const brandOptions = ${JSON.stringify(brandOptions)};
+      const typeOptions = ${JSON.stringify(typeOptions)};
       const patternsEndpoint = '/.netlify/functions/app/api/patterns';
       let adminLogged = false;
       let uploads = {};
@@ -359,28 +381,41 @@ function renderPage() {
         }
       }
 
-      function populateBrandOptions() {
-        const datalist = document.getElementById('brand-options');
-        datalist.innerHTML = '';
-        brandOptions.forEach((brand) => {
+      function populateBrandSelect(filter = '', selectedValue = '') {
+        const select = document.getElementById('brand');
+        const normalized = filter.trim().toLowerCase();
+        select.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Select a brand';
+        select.appendChild(placeholder);
+        const visible = brandOptions.filter((brand) => brand.toLowerCase().includes(normalized));
+        visible.forEach((brand) => {
           const opt = document.createElement('option');
           opt.value = brand;
-          datalist.appendChild(opt);
+          opt.textContent = brand;
+          if (brand === selectedValue) opt.selected = true;
+          select.appendChild(opt);
         });
+
+        if (selectedValue && !visible.includes(selectedValue)) {
+          const opt = document.createElement('option');
+          opt.value = selectedValue;
+          opt.textContent = selectedValue;
+          opt.selected = true;
+          select.appendChild(opt);
+        }
       }
 
       function saveUploads() {
         localStorage.setItem('patternUploads', JSON.stringify(uploads));
       }
 
-      function unique(values) {
-        return Array.from(new Set(values.filter(Boolean))).sort();
-      }
-
-      function typeCounts() {
-        return patterns.reduce((acc, item) => {
-          const key = item.type || 'Other';
-          acc[key] = (acc[key] || 0) + 1;
+      function countBy(list, key) {
+        return list.reduce((acc, item) => {
+          const val = item[key];
+          if (!val) return acc;
+          acc[val] = (acc[val] || 0) + 1;
           return acc;
         }, {});
       }
@@ -427,8 +462,10 @@ function renderPage() {
 
       function populateTypeFormOptions(selectedValue = '') {
         const select = document.getElementById('type');
-        const counts = typeCounts();
-        const sortedTypes = Object.keys(counts).sort();
+        const counts = countBy(patterns, 'type');
+        const dynamicTypes = Object.keys(counts).filter((type) => !typeOptions.includes(type));
+        const options = [...typeOptions, ...dynamicTypes];
+
         select.innerHTML = '';
 
         const placeholder = document.createElement('option');
@@ -436,10 +473,11 @@ function renderPage() {
         placeholder.textContent = 'Select a type';
         select.appendChild(placeholder);
 
-        sortedTypes.forEach((type) => {
+        options.forEach((type) => {
           const opt = document.createElement('option');
           opt.value = type;
-          opt.textContent = type + ' (' + counts[type] + ')';
+          const countLabel = counts[type] ? ' (' + counts[type] + ')' : '';
+          opt.textContent = type + countLabel;
           if (type === selectedValue) opt.selected = true;
           select.appendChild(opt);
         });
@@ -449,7 +487,7 @@ function renderPage() {
         otherOpt.textContent = 'Other (custom)';
         select.appendChild(otherOpt);
 
-        if (selectedValue && !sortedTypes.includes(selectedValue)) {
+        if (selectedValue && !options.includes(selectedValue)) {
           select.value = 'other';
           const customField = document.getElementById('custom-type');
           customField.classList.remove('d-none');
@@ -509,7 +547,7 @@ function renderPage() {
           card.className = 'col-md-4';
           card.innerHTML =
             '<div class="card h-100 shadow-sm border-0">' +
-            '<img src="' + resolveImageSrc(p.image_url) + '" class="card-img-top" alt="' + p.brand + ' ' + p.model + '">' +
+            '<img src="' + resolveImageSrc(p.image_url) + '" class="card-img-top zoomable" alt="' + p.brand + ' ' + p.model + '">' +
             '<div class="card-body d-flex flex-column">' +
             '<div class="d-flex justify-content-between align-items-start mb-2">' +
             '<span class="badge bg-primary">' + p.code + '</span>' +
@@ -570,37 +608,59 @@ function renderPage() {
         const modelSelect = document.getElementById('model-select');
         const trimSelect = document.getElementById('trim-select');
 
-        const allTypes = unique(patterns.map((p) => p.type));
-        const typeFiltered = typeSelect.value ? patterns.filter((p) => p.type === typeSelect.value) : patterns;
-        const brandFiltered = brandSelect.value ? typeFiltered.filter((p) => p.brand === brandSelect.value) : typeFiltered;
-        const yearFiltered = yearSelect.value ? brandFiltered.filter((p) => p.year === yearSelect.value) : brandFiltered;
-        const modelFiltered = modelSelect.value ? yearFiltered.filter((p) => p.model === modelSelect.value) : yearFiltered;
+        const source = Array.isArray(list) ? list : patterns;
 
-        fillSelect(typeSelect, allTypes, 'All types');
-        fillSelect(brandSelect, unique(typeFiltered.map((p) => p.brand)), 'All brands');
-        fillSelect(yearSelect, unique(brandFiltered.map((p) => p.year)), 'All years');
-        fillSelect(modelSelect, unique(modelFiltered.map((p) => p.model)), 'All models');
-        fillSelect(trimSelect, unique(modelFiltered.map((p) => p.trim)), 'All trims');
+        const selectedType = typeSelect.value;
+        const selectedBrand = brandSelect.value;
+        const selectedYear = yearSelect.value;
+        const selectedModel = modelSelect.value;
+
+        const forBrand = selectedType ? source.filter((p) => p.type === selectedType) : source;
+        const forYear = selectedBrand ? forBrand.filter((p) => p.brand === selectedBrand) : forBrand;
+        const forModel = selectedYear ? forYear.filter((p) => p.year === selectedYear) : forYear;
+        const forTrim = selectedModel ? forModel.filter((p) => p.model === selectedModel) : forModel;
+
+        fillSelect(typeSelect, countBy(source, 'type'), 'All types');
+        fillSelect(brandSelect, countBy(forBrand, 'brand'), 'All brands');
+        fillSelect(yearSelect, countBy(forYear, 'year'), 'All years');
+        fillSelect(modelSelect, countBy(forModel, 'model'), 'All models');
+        fillSelect(trimSelect, countBy(forTrim, 'trim'), 'All trims');
       }
 
-      function fillSelect(select, values, placeholder) {
+      function fillSelect(select, counts, placeholder) {
         const current = select.value;
         select.innerHTML = '';
         const defaultOpt = document.createElement('option');
         defaultOpt.value = '';
         defaultOpt.textContent = placeholder;
         select.appendChild(defaultOpt);
-        values.forEach((val) => {
-          const opt = document.createElement('option');
-          opt.value = val;
-          opt.textContent = val;
-          if (val === current) opt.selected = true;
-          select.appendChild(opt);
-        });
+        Object.keys(counts)
+          .sort()
+          .forEach((val) => {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = val + ' (' + counts[val] + ')';
+            if (val === current) opt.selected = true;
+            select.appendChild(opt);
+          });
       }
 
       document.getElementById('filter-form').addEventListener('change', applyFilters);
       document.getElementById('search-input').addEventListener('input', applyFilters);
+
+      document.getElementById('brand-search').addEventListener('input', (event) => {
+        populateBrandSelect(event.target.value, document.getElementById('brand').value);
+      });
+
+      const zoomModal = new bootstrap.Modal(document.getElementById('imageModal'));
+      document.getElementById('cards').addEventListener('click', (event) => {
+        const img = event.target.closest('img.card-img-top');
+        if (!img) return;
+        const zoomTarget = document.getElementById('zoom-image');
+        zoomTarget.src = img.getAttribute('src');
+        zoomTarget.alt = img.getAttribute('alt') || 'Pattern zoom preview';
+        zoomModal.show();
+      });
 
       function toggleAdminUI(isLoggedIn) {
         adminLogged = isLoggedIn;
@@ -681,6 +741,7 @@ function renderPage() {
         document.getElementById('custom-type').value = '';
         document.getElementById('save-pattern-btn').textContent = 'Save pattern';
         populateTypeFormOptions();
+        populateBrandSelect(document.getElementById('brand-search').value || '');
       }
 
       function showPreview(path) {
@@ -700,7 +761,7 @@ function renderPage() {
         document.getElementById('editing-index').value = String(index);
         document.getElementById('code').value = item.code;
         populateTypeFormOptions(item.type);
-        document.getElementById('brand').value = item.brand;
+        populateBrandSelect(document.getElementById('brand-search').value || '', item.brand);
         document.getElementById('year').value = item.year;
         document.getElementById('model').value = item.model;
         document.getElementById('trim').value = item.trim;
@@ -764,7 +825,7 @@ function renderPage() {
 
       // Initialize
       loadUploads();
-      populateBrandOptions();
+      populateBrandSelect();
       populateTypeFormOptions();
       refreshDropdowns(patterns);
       renderCards(patterns);

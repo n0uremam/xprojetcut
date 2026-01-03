@@ -10,6 +10,7 @@ body {
 .card img {
   height: 190px;
   object-fit: cover;
+  cursor: zoom-in;
 }
 
 .badge.text-bg-light {
