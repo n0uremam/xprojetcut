@@ -433,7 +433,7 @@ function renderPage() {
           body: JSON.stringify(item),
         });
         if (!res.ok) throw new Error('Save failed');
-        return true;
+        return res.json();
       }
 
       async function removePattern(code) {
@@ -814,7 +814,7 @@ function renderPage() {
         const editIndexValue = document.getElementById('editing-index').value;
         try {
           if (apiAvailable) {
-            await persistPattern(newItem);
+            await persistPattern({ ...newItem, isEdit: editIndexValue !== '' });
             await fetchPatterns();
           } else {
             if (editIndexValue !== '') {
@@ -859,10 +859,19 @@ async function handleApi(event) {
     if (method === 'POST') {
       try {
         const payload = JSON.parse(event.body || '{}');
-        const updated = memoryStore.filter((item) => item.code !== payload.code);
-        updated.unshift(payload);
+        const isEdit = Boolean(payload.isEdit);
+        let incomingCode = payload.code;
+        if (!isEdit) {
+          const exists = memoryStore.find((item) => item.code === incomingCode);
+          if (exists) {
+            incomingCode = incomingCode + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+          }
+        }
+        const updatedItem = { ...payload, code: incomingCode };
+        const updated = memoryStore.filter((item) => item.code !== updatedItem.code);
+        updated.unshift(updatedItem);
         memoryStore = updated;
-        return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ ok: true, source: 'memory' }) };
+        return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ pattern: updatedItem, source: 'memory' }) };
       } catch (err) {
         return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) };
       }
@@ -919,6 +928,15 @@ async function handleApi(event) {
       image_data: String(payload.image_data || ''),
       tags: String(payload.tags || ''),
     };
+
+    const isEdit = Boolean(payload.isEdit);
+    if (!isEdit) {
+      const existing = await sql`SELECT code FROM patterns WHERE code = ${sanitized.code}`;
+      if (existing.length) {
+        const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+        sanitized.code = `${sanitized.code}-${suffix}`;
+      }
+    }
 
     const rows = await sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, image_data, tags)
       VALUES (${sanitized.code}, ${sanitized.name}, ${sanitized.description}, ${sanitized.type}, ${sanitized.brand}, ${sanitized.year}, ${sanitized.model}, ${sanitized.trim}, ${sanitized.image_url}, ${sanitized.image_data}, ${sanitized.tags})
