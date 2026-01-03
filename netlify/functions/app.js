@@ -1,63 +1,6 @@
 const { neon } = require('@neondatabase/serverless');
 
-const seedPatterns = [
-  {
-    code: "AUD-A4-EXT-20",
-    name: "Audi A4 Exterior Wrap",
-    description: "Full-body exterior pattern sized for 2020 Audi A4.",
-    type: "Exterior",
-    brand: "Audi",
-    year: "2020",
-    model: "A4",
-    trim: "Premium",
-    image_url:
-      "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
-    image_data: "",
-    tags: "wrap,sedan,paint-protection",
-  },
-  {
-    code: "AUD-Q5-INT-21",
-    name: "Audi Q5 Interior Kit",
-    description: "Dashboard and console pattern set for 2021 Audi Q5.",
-    type: "Interior",
-    brand: "Audi",
-    year: "2021",
-    model: "Q5",
-    trim: "Sport",
-    image_url:
-      "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=60",
-    image_data: "",
-    tags: "dashboard,suv,luxury",
-  },
-  {
-    code: "BMW-X5-EXT-22",
-    name: "BMW X5 Exterior Protection",
-    description: "Front-end pattern kit for 2022 BMW X5.",
-    type: "Exterior",
-    brand: "BMW",
-    year: "2022",
-    model: "X5",
-    trim: "xDrive",
-    image_url:
-      "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=60",
-    image_data: "",
-    tags: "suv,ppf,front-kit",
-  },
-  {
-    code: "TES-3-INT-19",
-    name: "Tesla Model 3 Interior",
-    description: "Center console and dash overlay for Model 3.",
-    type: "Interior",
-    brand: "Tesla",
-    year: "2019",
-    model: "Model 3",
-    trim: "Long Range",
-    image_url:
-      "https://images.unsplash.com/photo-1511391038130-89ba48c93fd3?auto=format&fit=crop&w=800&q=60",
-    image_data: "",
-    tags: "ev,console,sedan",
-  },
-];
+const seedPatterns = [];
 
 const brandOptions = [
   "Abarth",
@@ -206,7 +149,7 @@ const typeOptions = [
   "Window Tint",
 ];
 
-let memoryStore = [...seedPatterns];
+let memoryStore = [];
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -245,17 +188,6 @@ async function ensureTable(sql) {
     created_at timestamptz default now()
   )`;
   await sql`ALTER TABLE patterns ADD COLUMN IF NOT EXISTS image_data text`;
-}
-
-async function seedDefaults(sql) {
-  const [{ count }] = await sql`SELECT COUNT(*)::int AS count FROM patterns`;
-  if (count > 0) return;
-  const inserts = seedPatterns.map((p) =>
-    sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, image_data, tags)
-        VALUES (${p.code}, ${p.name}, ${p.description}, ${p.type}, ${p.brand}, ${p.year}, ${p.model}, ${p.trim}, ${p.image_url}, ${p.image_data}, ${p.tags})
-        ON CONFLICT (code) DO NOTHING`
-  );
-  await Promise.all(inserts);
 }
 
 function renderPage() {
@@ -410,7 +342,7 @@ function renderPage() {
       const patternsEndpoint = '/.netlify/functions/app/api/patterns';
       let adminLogged = false;
       let currentImageData = '';
-      let patterns = seedPatterns.slice();
+      let patterns = [];
       let apiAvailable = false;
 
       function generateCode(brand, model, type, year) {
@@ -486,7 +418,7 @@ function renderPage() {
             }
         } catch (err) {
           console.warn('Falling back to local patterns', err);
-          patterns = seedPatterns.slice();
+          patterns = [];
           apiAvailable = false;
         }
         refreshDropdowns(patterns);
@@ -949,7 +881,6 @@ async function handleApi(event) {
 
   try {
     await ensureTable(sql);
-    await seedDefaults(sql);
   } catch (err) {
     console.error('Unable to prepare database', err);
     if (method === 'GET') {

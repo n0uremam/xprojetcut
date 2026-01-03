@@ -29,10 +29,10 @@ If the last URL 404s, Netlify did not find `netlify/functions/app.js` during the
 The function can persist patterns to a Neon/Postgres database using [`@neondatabase/serverless`](https://www.npmjs.com/package/@neondatabase/serverless). To enable it:
 
 1. Set an environment variable in Netlify (or locally) named `NETLIFY_DATABASE_URL` with your Neon connection string.
-2. Redeploy. The function will create a `patterns` table automatically and seed a few sample rows on first run.
+2. Redeploy. The function will create a `patterns` table automatically (no default rows are inserted).
 3. When logged in as the admin user (`admin` / `admin123`), new and edited patterns will be upserted to Neon. Uploaded images are stored as Base64 in the `image_data` column alongside `image_url`, and deletes also propagate to the table.
 
-If the environment variable is missing, the app falls back to an in-memory store for the current function instance and still renders the gallery using the bundled seed data.
+If the environment variable is missing, the app falls back to an in-memory store for the current function instance; patterns start empty until you add some.
 
 > Build note: Netlify’s installer previously failed because `@netlify/neon@^0.4.0` was requested even though that version does not exist. The dependency list now pins `@netlify/neon` to the published `0.1.0` release alongside `@neondatabase/serverless`, so `npm install` succeeds during deploys.
 
