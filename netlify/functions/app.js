@@ -61,17 +61,26 @@ const seedPatterns = [
 
 const brandOptions = [
   "Abarth",
+  "AC",
   "Acura",
+  "Aiways",
   "Alfa Romeo",
   "Alpina",
+  "Apollo",
+  "Ariel",
   "Aston Martin",
   "Audi",
+  "BAIC",
+  "Baojun",
   "Bentley",
+  "Bestune",
   "BMW",
+  "Brilliance",
   "Bugatti",
   "Buick",
   "BYD",
   "Cadillac",
+  "Canoo",
   "Changan",
   "Chery",
   "Chevrolet",
@@ -82,37 +91,56 @@ const brandOptions = [
   "Daewoo",
   "Daihatsu",
   "Datsun",
+  "DeLorean",
   "Dodge",
+  "Dongfeng",
   "DS Automobiles",
+  "Exeed",
+  "FAW",
   "Ferrari",
   "Fiat",
   "Fisker",
   "Ford",
+  "Foton",
+  "Geely",
   "Genesis",
   "GMC",
   "Great Wall",
   "Haval",
+  "Hennessey",
+  "HiPhi",
   "Hino",
   "Holden",
   "Honda",
+  "Hongqi",
+  "Hozon",
   "Hummer",
   "Hyundai",
   "Infiniti",
   "Isuzu",
+  "JAC",
   "Jaguar",
   "Jeep",
+  "Jetour",
+  "JMC",
+  "Karma",
   "Kia",
   "Koenigsegg",
   "Lada",
   "Lamborghini",
   "Lancia",
   "Land Rover",
+  "Leapmotor",
   "Lexus",
+  "Li Auto",
   "Lincoln",
   "Lotus",
   "Lucid",
+  "Lynk & Co",
+  "Mahindra",
   "Maserati",
   "Maybach",
+  "Maxus",
   "Mazda",
   "McLaren",
   "Mercedes-Benz",
@@ -121,6 +149,7 @@ const brandOptions = [
   "Mini",
   "Mitsubishi",
   "Morgan",
+  "Neta",
   "NIO",
   "Nissan",
   "Opel",
@@ -132,15 +161,21 @@ const brandOptions = [
   "Proton",
   "Ram",
   "Renault",
+  "Rimac",
   "Rivian",
   "Rolls-Royce",
+  "Roewe",
   "Saab",
   "Saleen",
   "Saturn",
   "Scion",
   "Seat",
+  "Seres",
+  "Shelby",
   "Škoda",
+  "Skyworth",
   "Smart",
+  "Soueast",
   "SsangYong",
   "Subaru",
   "Suzuki",
@@ -148,10 +183,19 @@ const brandOptions = [
   "Tesla",
   "Toyota",
   "Vauxhall",
+  "Venucia",
+  "VinFast",
   "Volkswagen",
   "Volvo",
+  "Voyah",
+  "Wey",
   "Wuling",
+  "XPeng",
+  "Yudo",
+  "Zedriv",
+  "Zeekr",
   "Zotye",
+  "Custom",
 ];
 
 const typeOptions = [
@@ -265,10 +309,7 @@ function renderPage() {
           <input type="hidden" id="editing-index" value="">
           <input type="hidden" id="image_data" value="">
           <input type="hidden" id="image_url" value="">
-          <div class="col-md-3">
-            <label class="form-label">Code</label>
-            <input class="form-control" id="code" name="code" type="text" required>
-          </div>
+          <input type="hidden" id="code" name="code" value="">
           <div class="col-md-3">
             <label class="form-label">Type</label>
             <select class="form-select" id="type" name="type" required></select>
@@ -279,6 +320,7 @@ function renderPage() {
             <div class="d-flex flex-column gap-2">
               <input class="form-control" id="brand-search" type="search" placeholder="Search brand">
               <select class="form-select" id="brand" name="brand" required></select>
+              <input class="form-control d-none" id="custom-brand" name="custom-brand" type="text" placeholder="Custom brand">
             </div>
           </div>
           <div class="col-md-2">
@@ -302,12 +344,8 @@ function renderPage() {
             </div>
           </div>
           <div class="col-12">
-            <label class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="2" required></textarea>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Tags (comma separated)</label>
-            <input class="form-control" id="tags" name="tags" type="text" placeholder="wrap, sedan, ppf">
+            <label class="form-label">Software Name (comma separated)</label>
+            <input class="form-control" id="tags" name="tags" type="text" placeholder="Software name, optional">
           </div>
           <div class="col-12 d-flex gap-2">
             <button class="btn btn-primary" type="submit" id="save-pattern-btn">Save pattern</button>
@@ -326,7 +364,7 @@ function renderPage() {
         <form class="row gy-3 align-items-end" id="filter-form">
           <div class="col-md-4">
             <label class="form-label">Search patterns</label>
-            <input type="search" name="search" class="form-control" id="search-input" placeholder="Search by name, description, or tags">
+            <input type="search" name="search" class="form-control" id="search-input" placeholder="Search by name or software">
           </div>
           <div class="col-md-2">
             <label class="form-label">Type</label>
@@ -375,6 +413,22 @@ function renderPage() {
       let patterns = seedPatterns.slice();
       let apiAvailable = false;
 
+      function generateCode(brand, model, type, year) {
+        const clean = (val) =>
+          (val || '')
+            .toString()
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-zA-Z0-9-]/g, '')
+            .toUpperCase();
+        const prefix = clean(brand).slice(0, 3) || 'PAT';
+        const modelPart = clean(model).slice(0, 4) || 'ITEM';
+        const typePart = clean(type).slice(0, 3) || 'GEN';
+        const yearPart = clean(year).slice(-2) || 'YY';
+        const unique = Date.now().toString().slice(-5);
+        return `${prefix}-${modelPart}-${typePart}-${yearPart}-${unique}`;
+      }
+
       function populateBrandSelect(filter = '', selectedValue = '') {
         const select = document.getElementById('brand');
         const normalized = filter.trim().toLowerCase();
@@ -392,7 +446,13 @@ function renderPage() {
           select.appendChild(opt);
         });
 
-        if (selectedValue && !visible.includes(selectedValue)) {
+        const customOpt = document.createElement('option');
+        customOpt.value = 'Custom';
+        customOpt.textContent = 'Custom (add brand)';
+        if (selectedValue === 'Custom') customOpt.selected = true;
+        select.appendChild(customOpt);
+
+        if (selectedValue && !visible.includes(selectedValue) && selectedValue !== 'Custom') {
           const opt = document.createElement('option');
           opt.value = selectedValue;
           opt.textContent = selectedValue;
@@ -416,7 +476,12 @@ function renderPage() {
           if (!res.ok) throw new Error('Failed to load patterns');
           const data = await res.json();
             if (Array.isArray(data.patterns)) {
-              patterns = data.patterns.map((p) => ({ ...p, tags: p.tags || '', image_data: p.image_data || '' }));
+              patterns = data.patterns.map((p) => ({
+                ...p,
+                tags: p.tags || '',
+                image_data: p.image_data || '',
+                description: p.description || '',
+              }));
               apiAvailable = true;
             }
         } catch (err) {
@@ -497,8 +562,9 @@ function renderPage() {
           const matchSearch =
             !search ||
             p.name.toLowerCase().includes(search) ||
-            p.description.toLowerCase().includes(search) ||
-            (p.tags || '').toLowerCase().includes(search);
+            (p.tags || '').toLowerCase().includes(search) ||
+            (p.brand || '').toLowerCase().includes(search) ||
+            (p.model || '').toLowerCase().includes(search);
           const matchType = !type || p.type === type;
           const matchBrand = !brand || p.brand === brand;
           const matchYear = !year || p.year === year;
@@ -542,7 +608,6 @@ function renderPage() {
             '<small class="text-muted">' + p.type + '</small>' +
             '</div>' +
             '<h5 class="card-title mb-1">' + p.brand + ' ' + p.model + '</h5>' +
-            '<p class="text-muted small">' + p.description + '</p>' +
             '<p class="mb-1 fw-semibold">' + p.brand + ' • ' + p.year + ' • ' + p.model + ' • ' + p.trim + '</p>' +
             '<div class="mt-auto d-flex flex-wrap gap-2">' + tagHtml + '</div>' +
             (adminLogged
@@ -640,6 +705,15 @@ function renderPage() {
         populateBrandSelect(event.target.value, document.getElementById('brand').value);
       });
 
+      document.getElementById('brand').addEventListener('change', (event) => {
+        const customField = document.getElementById('custom-brand');
+        const isCustom = event.target.value === 'Custom';
+        customField.classList.toggle('d-none', !isCustom);
+        if (!isCustom) {
+          customField.value = '';
+        }
+      });
+
       const zoomModal = new bootstrap.Modal(document.getElementById('imageModal'));
       document.getElementById('cards').addEventListener('click', (event) => {
         const img = event.target.closest('img.card-img-top');
@@ -726,6 +800,8 @@ function renderPage() {
         document.getElementById('pattern-form').reset();
         document.getElementById('custom-type').classList.add('d-none');
         document.getElementById('custom-type').value = '';
+        document.getElementById('custom-brand').classList.add('d-none');
+        document.getElementById('custom-brand').value = '';
         document.getElementById('save-pattern-btn').textContent = 'Save pattern';
         populateTypeFormOptions();
         populateBrandSelect(document.getElementById('brand-search').value || '');
@@ -748,6 +824,12 @@ function renderPage() {
         document.getElementById('code').value = item.code;
         populateTypeFormOptions(item.type);
         populateBrandSelect(document.getElementById('brand-search').value || '', item.brand);
+        if (!brandOptions.includes(item.brand) && item.brand) {
+          document.getElementById('brand').value = 'Custom';
+          const customField = document.getElementById('custom-brand');
+          customField.classList.remove('d-none');
+          customField.value = item.brand;
+        }
         document.getElementById('year').value = item.year;
         document.getElementById('model').value = item.model;
         document.getElementById('trim').value = item.trim;
@@ -755,7 +837,6 @@ function renderPage() {
         document.getElementById('image_data').value = item.image_data || '';
         currentImageData = item.image_data || '';
         showPreview(item.image_url, item.image_data || '');
-        document.getElementById('description').value = item.description;
         document.getElementById('tags').value = item.tags || '';
         document.getElementById('pattern-form').classList.remove('d-none');
         document.getElementById('save-pattern-btn').textContent = 'Update pattern';
@@ -773,23 +854,29 @@ function renderPage() {
           alert('Please select or enter a type.');
           return;
         }
-        const derivedName =
-          document.getElementById('brand').value.trim() +
-          ' ' +
-          document.getElementById('model').value.trim() +
-          (resolvedType ? ' (' + resolvedType + ')' : '');
+        const brandSelect = document.getElementById('brand');
+        const customBrandField = document.getElementById('custom-brand');
+        const brandValue = brandSelect.value === 'Custom' ? customBrandField.value.trim() : brandSelect.value.trim();
+        if (!brandValue) {
+          alert('Please choose or enter a brand.');
+          return;
+        }
+        const derivedName = brandValue + ' ' + document.getElementById('model').value.trim() + (resolvedType ? ' (' + resolvedType + ')' : '');
+        const existingCode = document.getElementById('code').value.trim();
+        const generatedCode = existingCode || generateCode(brandValue, document.getElementById('model').value, resolvedType, document.getElementById('year').value);
+        document.getElementById('code').value = generatedCode;
         const newItem = {
-          code: document.getElementById('code').value.trim(),
+          code: generatedCode,
           name: derivedName.trim(),
-          description: document.getElementById('description').value.trim(),
           type: resolvedType,
-          brand: document.getElementById('brand').value.trim(),
+          brand: brandValue,
           year: document.getElementById('year').value.trim(),
           model: document.getElementById('model').value.trim(),
           trim: document.getElementById('trim').value.trim(),
           image_url: uploadedData ? '' : existingUrl || 'https://via.placeholder.com/800x450.png?text=Pattern',
           image_data: uploadedData,
           tags: document.getElementById('tags').value.trim(),
+          description: '',
         };
 
         const editIndexValue = document.getElementById('editing-index').value;
