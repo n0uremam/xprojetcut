@@ -426,7 +426,7 @@ function renderPage() {
         const typePart = clean(type).slice(0, 3) || 'GEN';
         const yearPart = clean(year).slice(-2) || 'YY';
         const unique = Date.now().toString().slice(-5);
-        return `${prefix}-${modelPart}-${typePart}-${yearPart}-${unique}`;
+        return [prefix, modelPart, typePart, yearPart, unique].join('-');
       }
 
       function populateBrandSelect(filter = '', selectedValue = '') {
