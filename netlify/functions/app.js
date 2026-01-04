@@ -1,4 +1,4 @@
-const { neon } = require('@neondatabase/serverless');
+const { Pool } = require('pg');
 
 const seedPatterns = [];
 
@@ -162,12 +162,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+let pool;
+
 async function getSqlClient() {
-  if (!process.env.NETLIFY_DATABASE_URL) return null;
+  const connectionString = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
+  if (!connectionString) return null;
   try {
-    return neon(process.env.NETLIFY_DATABASE_URL);
+    if (!pool) {
+      pool = new Pool({ connectionString, ssl: { rejectUnauthorized: true } });
+    }
+    return async (strings, ...values) => {
+      const text = strings.reduce((acc, str, idx) => acc + str + (idx < values.length ? `$${idx + 1}` : ''), '');
+      const result = await pool.query(text, values);
+      return result.rows;
+    };
   } catch (err) {
-    console.error("Failed to create Neon client", err);
+    console.error("Failed to create database client", err);
     return null;
   }
 }
@@ -900,7 +910,7 @@ async function handleApi(event) {
 
   if (method === 'GET') {
     const rows = await sql`SELECT code, name, description, type, brand, year, model, trim, image_url, image_data, tags FROM patterns ORDER BY created_at DESC`;
-    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ patterns: rows, source: 'neon' }) };
+    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ patterns: rows, source: 'cockroach' }) };
   }
 
   if (method === 'POST') {
@@ -943,7 +953,7 @@ async function handleApi(event) {
       ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, type = EXCLUDED.type, brand = EXCLUDED.brand, year = EXCLUDED.year, model = EXCLUDED.model, trim = EXCLUDED.trim, image_url = EXCLUDED.image_url, image_data = EXCLUDED.image_data, tags = EXCLUDED.tags
       RETURNING code, name, description, type, brand, year, model, trim, image_url, image_data, tags`;
 
-    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ pattern: rows[0], source: 'neon' }) };
+    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ pattern: rows[0], source: 'cockroach' }) };
   }
 
   if (method === 'DELETE') {
@@ -957,7 +967,7 @@ async function handleApi(event) {
       return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Missing pattern code' }) };
     }
     await sql`DELETE FROM patterns WHERE code = ${payload.code}`;
-    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ ok: true, source: 'neon' }) };
+    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ ok: true, source: 'cockroach' }) };
   }
 
   return { statusCode: 405, headers: jsonHeaders, body: JSON.stringify({ error: 'Method not allowed' }) };
