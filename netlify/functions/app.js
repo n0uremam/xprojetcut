@@ -163,23 +163,29 @@ const corsHeaders = {
 };
 
 let pool;
+let dbModeLogged = false;
 
 async function getSqlClient() {
-  const connectionString = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
-  if (!connectionString) return null;
-  try {
-    if (!pool) {
-      pool = new Pool({ connectionString, ssl: { rejectUnauthorized: true } });
+  const connectionString = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL;
+  if (!connectionString) {
+    if (!dbModeLogged) {
+      console.log('DB: memory');
+      dbModeLogged = true;
     }
-    return async (strings, ...values) => {
-      const text = strings.reduce((acc, str, idx) => acc + str + (idx < values.length ? `$${idx + 1}` : ''), '');
-      const result = await pool.query(text, values);
-      return result.rows;
-    };
-  } catch (err) {
-    console.error("Failed to create database client", err);
     return null;
   }
+
+  if (!pool) {
+    pool = new Pool({ connectionString, ssl: { rejectUnauthorized: true } });
+    await pool.query('SELECT 1');
+    console.log('DB: cockroach');
+    dbModeLogged = true;
+  }
+
+  return async (strings, ...values) => {
+    const text = strings.reduce((acc, str, idx) => acc + str + (idx < values.length ? `$${idx + 1}` : ''), '');
+    return pool.query(text, values).then((result) => result.rows);
+  };
 }
 
 async function ensureTable(sql) {
@@ -855,7 +861,13 @@ function renderPage() {
 }
 
 async function handleApi(event) {
-  const sql = await getSqlClient();
+  let sql;
+  try {
+    sql = await getSqlClient();
+  } catch (err) {
+    console.error('Database client error', err);
+    return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: 'Database unavailable' }) };
+  }
   const method = event.httpMethod || 'GET';
 
   if (method === 'OPTIONS') {
@@ -902,15 +914,17 @@ async function handleApi(event) {
     await ensureTable(sql);
   } catch (err) {
     console.error('Unable to prepare database', err);
-    if (method === 'GET') {
-      return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ patterns: memoryStore, source: 'memory' }) };
-    }
     return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: 'Database not ready' }) };
   }
 
   if (method === 'GET') {
-    const rows = await sql`SELECT code, name, description, type, brand, year, model, trim, image_url, image_data, tags FROM patterns ORDER BY created_at DESC`;
-    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ patterns: rows, source: 'cockroach' }) };
+    try {
+      const rows = await sql`SELECT code, name, description, type, brand, year, model, trim, image_url, image_data, tags FROM patterns ORDER BY created_at DESC`;
+      return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ patterns: rows, source: 'cockroach' }) };
+    } catch (err) {
+      console.error('Database query failed', err);
+      return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: 'Database query failed' }) };
+    }
   }
 
   if (method === 'POST') {
@@ -948,12 +962,17 @@ async function handleApi(event) {
       }
     }
 
-    const rows = await sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, image_data, tags)
-      VALUES (${sanitized.code}, ${sanitized.name}, ${sanitized.description}, ${sanitized.type}, ${sanitized.brand}, ${sanitized.year}, ${sanitized.model}, ${sanitized.trim}, ${sanitized.image_url}, ${sanitized.image_data}, ${sanitized.tags})
-      ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, type = EXCLUDED.type, brand = EXCLUDED.brand, year = EXCLUDED.year, model = EXCLUDED.model, trim = EXCLUDED.trim, image_url = EXCLUDED.image_url, image_data = EXCLUDED.image_data, tags = EXCLUDED.tags
-      RETURNING code, name, description, type, brand, year, model, trim, image_url, image_data, tags`;
+    try {
+      const rows = await sql`INSERT INTO patterns (code, name, description, type, brand, year, model, trim, image_url, image_data, tags)
+        VALUES (${sanitized.code}, ${sanitized.name}, ${sanitized.description}, ${sanitized.type}, ${sanitized.brand}, ${sanitized.year}, ${sanitized.model}, ${sanitized.trim}, ${sanitized.image_url}, ${sanitized.image_data}, ${sanitized.tags})
+        ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, type = EXCLUDED.type, brand = EXCLUDED.brand, year = EXCLUDED.year, model = EXCLUDED.model, trim = EXCLUDED.trim, image_url = EXCLUDED.image_url, image_data = EXCLUDED.image_data, tags = EXCLUDED.tags
+        RETURNING code, name, description, type, brand, year, model, trim, image_url, image_data, tags`;
 
-    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ pattern: rows[0], source: 'cockroach' }) };
+      return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ pattern: rows[0], source: 'cockroach' }) };
+    } catch (err) {
+      console.error('Database write failed', err);
+      return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: 'Database write failed' }) };
+    }
   }
 
   if (method === 'DELETE') {
@@ -966,8 +985,13 @@ async function handleApi(event) {
     if (!payload.code) {
       return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Missing pattern code' }) };
     }
-    await sql`DELETE FROM patterns WHERE code = ${payload.code}`;
-    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ ok: true, source: 'cockroach' }) };
+    try {
+      await sql`DELETE FROM patterns WHERE code = ${payload.code}`;
+      return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ ok: true, source: 'cockroach' }) };
+    } catch (err) {
+      console.error('Database delete failed', err);
+      return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: 'Database delete failed' }) };
+    }
   }
 
   return { statusCode: 405, headers: jsonHeaders, body: JSON.stringify({ error: 'Method not allowed' }) };
