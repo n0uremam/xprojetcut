@@ -39,7 +39,7 @@ Netlify does **not** run Python/Flask functions. If you need Flask, host it on a
 
 ## Render start command
 
-When deploying to Render Web Services, set the **Start Command** to `npm start` so it invokes `node netlify/functions/app.cjs` via the existing script.
+When deploying to Render Web Services, set the **Start Command** to `npm start` so it invokes `node netlify/functions/app.cjs` via the existing script. The function entrypoint is CommonJS-only (`app.cjs`), so avoid pointing Render or local starts at `app.js`.
 
 ## Pattern data folder
 
