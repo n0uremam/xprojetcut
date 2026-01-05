@@ -4,7 +4,7 @@
   "description": "Minimal Netlify deployment with a Node.js function entrypoint and loading page.",
   "main": "index.js",
   "scripts": {
-    "start": "node netlify/functions/app.cjs",
+    "start": "node render-server.cjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
