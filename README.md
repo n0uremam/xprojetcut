@@ -37,6 +37,10 @@ If the environment variable is missing, the app falls back to an in-memory store
 ## Using a different backend
 Netlify does **not** run Python/Flask functions. If you need Flask, host it on a Python-friendly provider (Render, Railway, etc.) and call it from the frontend. To keep everything on Netlify, rewrite the backend in Node.js as additional functions alongside `netlify/functions/app.cjs`.
 
+## Render start command
+
+When deploying to Render Web Services, set the **Start Command** to `npm start` so it invokes `node netlify/functions/app.cjs` via the existing script.
+
 ## Pattern data folder
 
 The `patterns/` directory is included for storing exported pattern JSON or assets under version control. When CockroachDB is configured, admin edits (including uploaded images) are persisted to the database; otherwise the function keeps changes in memory for the current invocation.
