@@ -5,26 +5,26 @@
   <title>Loading the app…</title>
 
   <!-- Must be exactly 0 seconds for html-validate -->
-  <meta http-equiv="refresh" content="0; url=/.netlify/functions/app">
+  <meta http-equiv="refresh" content="0; url=/api">
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
   <h1>Loading the app…</h1>
   <p>
-    We’re sending you to the Netlify Function backend.
+    We’re sending you to the Cloudflare Pages Function backend.
     If you are not redirected automatically, click the button below.
   </p>
 
   <!-- Button is no longer inside <a>, and has type attribute -->
-  <button type="button" onclick="window.location.href='/.netlify/functions/app'">
+  <button type="button" onclick="window.location.href='/api'">
     Open the app
   </button>
 
   <!-- JS redirect as a backup -->
   <script>
     // Only runs if the meta-refresh somehow doesn't
-    window.location.replace("/.netlify/functions/app");
+    window.location.replace("/api");
   </script>
 </body>
 </html>
