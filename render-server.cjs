@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.text({ type: '*/*', limit: '10mb' }));
 app.use(express.static(path.join(__dirname)));
 
-async function forwardToNetlifyHandler(req, res) {
+async function forwardToNetlifyHandler(req, res, pathOverride = null) {
   try {
     let body = req.body;
     if (body === undefined || body === null || body === '') {
@@ -21,7 +21,7 @@ async function forwardToNetlifyHandler(req, res) {
 
     const event = {
       httpMethod: req.method,
-      path: req.originalUrl,
+      path: pathOverride || req.originalUrl,
       headers: req.headers,
       queryStringParameters: req.query,
       body,
@@ -40,6 +40,12 @@ async function forwardToNetlifyHandler(req, res) {
   }
 }
 
+app.get('/api', (req, res) => {
+  res.status(200).json({ ok: true });
+});
+
+app.all('/api/patterns', (req, res) => forwardToNetlifyHandler(req, res, '/api/patterns'));
+app.all('/api/patterns/*', (req, res) => forwardToNetlifyHandler(req, res, req.originalUrl));
 app.all('/.netlify/functions/app/*', forwardToNetlifyHandler);
 app.all('/.netlify/functions/app', forwardToNetlifyHandler);
 
