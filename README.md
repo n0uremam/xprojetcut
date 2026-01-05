@@ -13,7 +13,7 @@ This repository serves a static landing page plus a Node.js Pages Function (`fun
 │       └── [...all].js  # Cloudflare Pages Function entry
 └── netlify
     └── functions        # Legacy Netlify function folder (unused on Cloudflare)
-        └── app.js
+        └── app.cjs
 ```
 
 ## Deploying to Cloudflare Pages
@@ -35,7 +35,7 @@ The function can persist patterns to a CockroachDB Cloud (Postgres-compatible) d
 If the environment variable is missing, the app falls back to an in-memory store for the current function instance; patterns start empty until you add some. When CockroachDB is configured but unreachable, the function returns a 500 error instead of silently falling back.
 
 ## Using a different backend
-Netlify does **not** run Python/Flask functions. If you need Flask, host it on a Python-friendly provider (Render, Railway, etc.) and call it from the frontend. To keep everything on Netlify, rewrite the backend in Node.js as additional functions alongside `netlify/functions/app.js`.
+Netlify does **not** run Python/Flask functions. If you need Flask, host it on a Python-friendly provider (Render, Railway, etc.) and call it from the frontend. To keep everything on Netlify, rewrite the backend in Node.js as additional functions alongside `netlify/functions/app.cjs`.
 
 ## Pattern data folder
 
