@@ -1,6 +1,5 @@
 const path = require('path');
 const express = require('express');
-const { handler } = require('./netlify/functions/app.cjs');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,58 +9,59 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.text({ type: '*/*', limit: '10mb' }));
 app.use(express.static(path.join(__dirname)));
 
-async function forwardToNetlifyHandler(req, res, pathOverride = null) {
-  try {
-    let body = req.body;
-    if (body === undefined || body === null || body === '') {
-      body = null;
-    } else if (typeof body !== 'string') {
-      body = JSON.stringify(body);
+(async () => {
+  const { onRequest } = await import('./functions/api/[...all].js');
+
+  async function forwardToOnRequest(req, res, pathOverride = null) {
+    try {
+      const targetPath = pathOverride || req.originalUrl;
+      const fullUrl = `${req.protocol}://${req.get('host')}${targetPath}`;
+      const headers = new Headers();
+      Object.entries(req.headers || {}).forEach(([key, value]) => {
+        if (value) {
+          headers.set(key, Array.isArray(value) ? value.join(',') : String(value));
+        }
+      });
+
+      let body;
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        if (req.body === undefined || req.body === null || req.body === '') {
+          body = undefined;
+        } else if (typeof req.body === 'string') {
+          body = req.body;
+        } else {
+          body = JSON.stringify(req.body);
+        }
+      }
+
+      const cfRequest = new Request(fullUrl, {
+        method: req.method,
+        headers,
+        body,
+      });
+
+      const cfResp = await onRequest({ request: cfRequest, env: process.env });
+      res.status(cfResp.status || 200);
+      cfResp.headers.forEach((v, k) => res.setHeader(k, v));
+      const text = await cfResp.text();
+      res.send(text);
+    } catch (error) {
+      console.error('Forwarding to onRequest failed', error);
+      res.status(500).send('Internal Server Error');
     }
-
-    const event = {
-      httpMethod: req.method,
-      path: pathOverride || req.originalUrl,
-      headers: req.headers,
-      queryStringParameters: req.query,
-      body,
-    };
-
-    const out = await handler(event);
-
-    if (out && out.headers) {
-      res.set(out.headers);
-    }
-
-    res.status(out?.statusCode || 200).send(out?.body ?? '');
-  } catch (error) {
-    console.error('Handler forwarding failed', error);
-    res.status(500).send('Internal Server Error');
   }
-}
 
-app.get('/api', (req, res) => {
-  res.status(200).json({ ok: true });
-});
+  app.all('/api', forwardToOnRequest);
+  app.all('/api/*', forwardToOnRequest);
+  app.all('/.netlify/functions/app', forwardToOnRequest);
+  app.all('/.netlify/functions/app/*', forwardToOnRequest);
 
-app.all('/api/patterns', (req, res) => forwardToNetlifyHandler(req, res, '/api/patterns'));
-app.all('/api/patterns/*', (req, res) => forwardToNetlifyHandler(req, res, req.originalUrl));
-app.all('/.netlify/functions/app/*', forwardToNetlifyHandler);
-app.all('/.netlify/functions/app', forwardToNetlifyHandler);
+  app.get('/', (req, res) => forwardToOnRequest(req, res, '/'));
 
-app.get('/', async (req, res) => {
-  try {
-    const out = await handler({ httpMethod: 'GET', path: '/', headers: req.headers, queryStringParameters: {}, body: null });
-    if (out && out.headers) {
-      res.set(out.headers);
-    }
-    res.status(out?.statusCode || 200).send(out?.body ?? '');
-  } catch (error) {
-    console.error('Homepage handling failed', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-app.listen(port, () => {
-  console.log(`Render server listening on port ${port}`);
+  app.listen(port, () => {
+    console.log(`Render server listening on port ${port}`);
+  });
+})().catch((error) => {
+  console.error('Render server failed to start', error);
+  process.exit(1);
 });
