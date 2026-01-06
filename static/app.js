@@ -221,24 +221,24 @@ function renderCards(list) {
       });
     body.appendChild(tagWrap);
 
-    const actions = document.createElement('div');
-    actions.className = 'd-flex gap-2 mt-auto';
+    if (adminLogged) {
+      const actions = document.createElement('div');
+      actions.className = 'd-flex gap-2 mt-auto';
 
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn btn-sm btn-outline-primary';
-    editBtn.textContent = 'Edit';
-    editBtn.disabled = !adminLogged;
-    editBtn.addEventListener('click', () => startEdit(index));
-    actions.appendChild(editBtn);
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn btn-sm btn-outline-primary';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => startEdit(item.code));
+      actions.appendChild(editBtn);
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn btn-sm btn-outline-danger';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.disabled = !adminLogged;
-    deleteBtn.addEventListener('click', () => deletePattern(index));
-    actions.appendChild(deleteBtn);
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn btn-sm btn-outline-danger';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', () => deletePattern(item.code));
+      actions.appendChild(deleteBtn);
 
-    body.appendChild(actions);
+      body.appendChild(actions);
+    }
     card.appendChild(body);
     col.appendChild(card);
     cardsWrap.appendChild(col);
@@ -269,7 +269,9 @@ function toggleAdminUI(show) {
   document.getElementById('pattern-form').classList.toggle('d-none', !show);
 }
 
-function startEdit(index) {
+function startEdit(code) {
+  const index = patterns.findIndex((p) => p.code === code);
+  if (index < 0) return;
   const item = patterns[index];
   document.getElementById('editing-index').value = index;
   document.getElementById('code').value = item.code || '';
@@ -295,7 +297,8 @@ function startEdit(index) {
   document.getElementById('open-form-btn').click();
 }
 
-async function deletePattern(index) {
+async function deletePattern(code) {
+  const index = patterns.findIndex((p) => p.code === code);
   const item = patterns[index];
   if (!item || !item.code) return;
   if (!confirm('Delete this pattern?')) return;
@@ -357,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleAdminUI(false);
     const form = document.getElementById('login-form');
     form.classList.add('d-none');
+    applyFilters();
   });
 
   document.getElementById('login-form').addEventListener('submit', (e) => {
@@ -369,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('login-btn').classList.add('d-none');
       document.getElementById('logout-btn').classList.remove('d-none');
       document.getElementById('login-form').classList.add('d-none');
+      applyFilters();
     } else {
       alert('Invalid credentials');
     }
