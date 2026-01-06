@@ -10,6 +10,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const seedPatterns = [];
+const memoryStore = [];
 
 const brandOptions = [
   "Abarth", "AC", "Acura", "Aiways", "Alfa Romeo", "Alpina", "Apollo", "Ariel", "Aston Martin", "Audi", "BAIC", "Baojun", "Bentley", "Bestune", "BMW", "Brilliance", "Bugatti", "Buick", "BYD", "Cadillac", "Canoo", "Changan", "Chery", "Chevrolet", "Chrysler", "Citroën", "Cupra", "Dacia", "Daewoo", "Daihatsu", "Datsun", "DeLorean", "Dodge", "Dongfeng", "DS Automobiles", "Exeed", "FAW", "Ferrari", "Fiat", "Fisker", "Ford", "Foton", "Geely", "Genesis", "GMC", "Great Wall", "Haval", "Hennessey", "HiPhi", "Hino", "Holden", "Honda", "Hongqi", "Hozon", "Hummer", "Hyundai", "Infiniti", "Isuzu", "JAC", "Jaguar", "Jeep", "Jetour", "JMC", "Karma", "Kia", "Koenigsegg", "Lada", "Lamborghini", "Lancia", "Land Rover", "Leapmotor", "Lexus", "Li Auto", "Lincoln", "Lotus", "Lucid", "Lynk & Co", "Mahindra", "Maserati", "Maybach", "Maxus", "Mazda", "McLaren", "Mercedes-Benz", "Mercury", "MG", "Mini", "Mitsubishi", "Morgan", "Neta", "NIO", "Nissan", "Opel", "Pagani", "Peugeot", "Polestar", "Pontiac", "Porsche", "Proton", "Ram", "Renault", "Rimac", "Rivian", "Rolls-Royce", "Roewe", "Saab", "Saleen", "Saturn", "Scion", "Seat", "Seres", "Shelby", "Škoda", "Skyworth", "Smart", "Soueast", "SsangYong", "Subaru", "Suzuki", "Tata", "Tesla", "Toyota", "Vauxhall", "Venucia", "VinFast", "Volkswagen", "Volvo", "Voyah", "Wey", "Wuling", "XPeng", "Yudo", "Zedriv", "Zeekr", "Zotye", "Custom",
@@ -218,6 +219,12 @@ function renderPage() {
             <label class="form-label">Trim</label>
             <select class="form-select" name="trim" id="trim-select"></select>
           </div>
+          <div class="col-md-2 d-flex align-items-end justify-content-end">
+            <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" type="button" id="reset-filters-btn">
+              <span aria-hidden="true">↻</span>
+              <span>Reset Filters</span>
+            </button>
+          </div>
         </form>
       </section>
 
@@ -252,20 +259,22 @@ function toJson(res, data, status = 200) {
 
 async function handleApi(req, res) {
   const sql = await getSqlClient(process.env);
-  if (!sql) {
-    console.error('Database connection string missing; memory fallback disabled');
-    return toJson(res, { error: 'Database not configured' }, 500);
-  }
+  const useMemory = !sql;
 
-  try {
-    await ensureTable(sql);
-  } catch (err) {
-    console.error('Unable to prepare database', err);
-    return toJson(res, { error: 'Database not ready' }, 500);
+  if (!useMemory) {
+    try {
+      await ensureTable(sql);
+    } catch (err) {
+      console.error('Unable to prepare database', err);
+      return toJson(res, { error: 'Database not ready' }, 500);
+    }
   }
 
   try {
     if (req.method === 'GET') {
+      if (useMemory) {
+        return toJson(res, { patterns: memoryStore, source: 'memory' });
+      }
       const rows = await sql`SELECT code, name, description, type, brand, year, model, trim, image_url, image_data, tags FROM patterns ORDER BY created_at DESC`;
       return toJson(res, { patterns: rows, source: 'cockroach' });
     }
@@ -289,6 +298,19 @@ async function handleApi(req, res) {
         tags: String(payload.tags || ''),
       };
       const isEdit = Boolean(payload.isEdit);
+      if (useMemory) {
+        const existingIndex = memoryStore.findIndex((p) => p.code === sanitized.code);
+        if (!isEdit && existingIndex >= 0) {
+          const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+          sanitized.code = `${sanitized.code}-${suffix}`;
+        }
+        if (existingIndex >= 0) {
+          memoryStore[existingIndex] = sanitized;
+        } else {
+          memoryStore.unshift(sanitized);
+        }
+        return toJson(res, { pattern: sanitized, source: 'memory' });
+      }
       if (!isEdit) {
         const existing = await sql`SELECT code FROM patterns WHERE code = ${sanitized.code}`;
         if (existing.length) {
@@ -306,6 +328,11 @@ async function handleApi(req, res) {
     if (req.method === 'DELETE') {
       const payload = req.body || {};
       if (!payload.code) return toJson(res, { error: 'Missing pattern code' }, 400);
+      if (useMemory) {
+        const idx = memoryStore.findIndex((p) => p.code === payload.code);
+        if (idx >= 0) memoryStore.splice(idx, 1);
+        return toJson(res, { ok: true, source: 'memory' });
+      }
       await sql`DELETE FROM patterns WHERE code = ${payload.code}`;
       return toJson(res, { ok: true, source: 'cockroach' });
     }

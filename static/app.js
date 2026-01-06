@@ -108,6 +108,15 @@ function applyFilters() {
   renderCards(filtered);
 }
 
+function resetFilters() {
+  document.getElementById('search-input').value = '';
+  ['type-select', 'brand-select', 'year-select', 'model-select', 'trim-select'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  applyFilters();
+}
+
 function refreshDropdowns(list) {
   const typeCounts = countBy(list, 'type');
   const brandCounts = countBy(list, 'brand');
@@ -428,6 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('filter-form').addEventListener('change', applyFilters);
   document.getElementById('search-input').addEventListener('input', applyFilters);
+  document.getElementById('reset-filters-btn').addEventListener('click', resetFilters);
 
   document.getElementById('pattern-form').addEventListener('submit', async (e) => {
     e.preventDefault();
