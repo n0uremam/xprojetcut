@@ -238,14 +238,14 @@ function renderCards(list) {
       actions.className = 'd-flex gap-2 mt-auto';
 
       const editBtn = document.createElement('button');
-      editBtn.className = 'btn btn-sm btn-outline-primary';
-      editBtn.textContent = 'Edit';
+      editBtn.className = 'btn btn-sm btn-outline-primary d-flex align-items-center gap-2';
+      editBtn.innerHTML = '<i class="bi bi-pencil-square"></i><span>Edit</span>';
       editBtn.addEventListener('click', () => startEdit(item.code));
       actions.appendChild(editBtn);
 
       const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'btn btn-sm btn-outline-danger';
-      deleteBtn.textContent = 'Delete';
+      deleteBtn.className = 'btn btn-sm btn-outline-danger d-flex align-items-center gap-2';
+      deleteBtn.innerHTML = '<i class="bi bi-trash"></i><span>Delete</span>';
       deleteBtn.addEventListener('click', () => deletePattern(item.code));
       actions.appendChild(deleteBtn);
 
