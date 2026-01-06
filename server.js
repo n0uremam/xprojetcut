@@ -23,11 +23,9 @@ const typeOptions = [
   "Window Tint",
 ];
 
-let memoryStore = [];
 let pool;
 let tableInitialized = false;
 let dbModeLogged = false;
-const allowMemoryFallback = process.env.ALLOW_MEMORY_FALLBACK === '1';
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -252,56 +250,9 @@ function toJson(res, data, status = 200) {
   res.status(status).send(JSON.stringify(data));
 }
 
-function handleMemory(req, res) {
-  const method = req.method;
-  if (method === 'GET') {
-    return toJson(res, { patterns: memoryStore, source: 'memory' });
-  }
-  const payload = req.body || {};
-  if (method === 'POST') {
-    if (!payload.code || !payload.type || !payload.brand || !payload.model) {
-      return toJson(res, { error: 'Missing required fields' }, 400);
-    }
-    const isEdit = Boolean(payload.isEdit);
-    let code = String(payload.code);
-    if (!isEdit && memoryStore.some((p) => p.code === code)) {
-      code = `${code}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-    }
-    const record = {
-      code,
-      name: String(payload.name || payload.model || 'Pattern'),
-      description: String(payload.description || ''),
-      type: String(payload.type),
-      brand: String(payload.brand),
-      year: String(payload.year || ''),
-      model: String(payload.model),
-      trim: String(payload.trim || ''),
-      image_url: String(payload.image_url || ''),
-      image_data: String(payload.image_data || ''),
-      tags: String(payload.tags || ''),
-    };
-    const idx = memoryStore.findIndex((p) => p.code === payload.code);
-    if (isEdit && idx >= 0) {
-      memoryStore[idx] = record;
-    } else {
-      memoryStore.push(record);
-    }
-    return toJson(res, { pattern: record, source: 'memory' });
-  }
-  if (method === 'DELETE') {
-    if (!payload.code) return toJson(res, { error: 'Missing pattern code' }, 400);
-    memoryStore = memoryStore.filter((p) => p.code !== payload.code);
-    return toJson(res, { ok: true, source: 'memory' });
-  }
-  return toJson(res, { error: 'Method not allowed' }, 405);
-}
-
 async function handleApi(req, res) {
   const sql = await getSqlClient(process.env);
   if (!sql) {
-    if (allowMemoryFallback) {
-      return handleMemory(req, res);
-    }
     console.error('Database connection string missing; memory fallback disabled');
     return toJson(res, { error: 'Database not configured' }, 500);
   }

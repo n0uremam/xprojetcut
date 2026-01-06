@@ -58,6 +58,11 @@ function countBy(list, key) {
   }, {});
 }
 
+function showApiError(message) {
+  const cardsWrap = document.getElementById('cards');
+  cardsWrap.innerHTML = `<div class="alert alert-warning" role="alert">${message}</div>`;
+}
+
 async function fetchPatterns() {
   try {
     const res = await fetch(patternsEndpoint, { headers: { Accept: 'application/json' } });
@@ -68,10 +73,11 @@ async function fetchPatterns() {
     refreshDropdowns(patterns);
     renderCards(patterns);
   } catch (err) {
-    console.warn('API unavailable, falling back to seed data', err);
-    patterns = seedPatterns;
+    console.error('API unavailable', err);
+    apiAvailable = false;
+    patterns = [];
     refreshDropdowns(patterns);
-    renderCards(patterns);
+    showApiError('Unable to reach the database. Please check the backend connection and reload.');
   }
 }
 
@@ -302,20 +308,21 @@ async function deletePattern(code) {
   const item = patterns[index];
   if (!item || !item.code) return;
   if (!confirm('Delete this pattern?')) return;
-  if (apiAvailable) {
-    const res = await fetch(patternsEndpoint, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: item.code }),
-    });
-    if (!res.ok) {
-      alert('Failed to delete');
-      return;
-    }
-    patterns = patterns.filter((p) => p.code !== item.code);
-  } else {
-    patterns = patterns.filter((p) => p.code !== item.code);
+  if (!apiAvailable) {
+    alert('Cannot delete while the database is unavailable.');
+    return;
   }
+
+  const res = await fetch(patternsEndpoint, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: item.code }),
+  });
+  if (!res.ok) {
+    alert('Failed to delete');
+    return;
+  }
+  patterns = patterns.filter((p) => p.code !== item.code);
   applyFilters();
 }
 
@@ -443,34 +450,30 @@ document.addEventListener('DOMContentLoaded', () => {
       isEdit: Boolean(document.getElementById('editing-index').value),
     };
 
-    if (apiAvailable) {
-      const res = await fetch(patternsEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        alert('Failed to save pattern');
-        return;
-      }
-      const data = await res.json();
-      if (payload.isEdit) {
-        const idx = patterns.findIndex((p) => p.code === payload.code);
-        if (idx >= 0) {
-          patterns[idx] = data.pattern;
-        } else {
-          patterns.push(data.pattern);
-        }
+    if (!apiAvailable) {
+      alert('Database unavailable. Please check the backend connection and try again.');
+      return;
+    }
+
+    const res = await fetch(patternsEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      alert('Failed to save pattern');
+      return;
+    }
+    const data = await res.json();
+    if (payload.isEdit) {
+      const idx = patterns.findIndex((p) => p.code === payload.code);
+      if (idx >= 0) {
+        patterns[idx] = data.pattern;
       } else {
         patterns.push(data.pattern);
       }
     } else {
-      const existingIdx = patterns.findIndex((p) => p.code === payload.code);
-      if (existingIdx >= 0) {
-        const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
-        payload.code = `${payload.code}-${suffix}`;
-      }
-      patterns.push(payload);
+      patterns.push(data.pattern);
     }
 
     resetForm();
