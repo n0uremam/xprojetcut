@@ -125,59 +125,48 @@ function refreshDropdowns(list) {
   const trimCounts = countBy(list, 'trim');
 
   const typeSelect = document.getElementById('type-select');
-  typeSelect.innerHTML = '<option value="">All types</option>';
-  Object.keys(typeCounts)
-    .sort()
-    .forEach((type) => {
-      const opt = document.createElement('option');
-      opt.value = type;
-      opt.textContent = `${type} (${typeCounts[type]})`;
-      typeSelect.appendChild(opt);
-    });
-
   const brandSelect = document.getElementById('brand-select');
-  brandSelect.innerHTML = '<option value="">All brands</option>';
-  Object.keys(brandCounts)
-    .sort()
-    .forEach((brand) => {
-      const opt = document.createElement('option');
-      opt.value = brand;
-      opt.textContent = `${brand} (${brandCounts[brand]})`;
-      brandSelect.appendChild(opt);
-    });
-
   const yearSelect = document.getElementById('year-select');
-  yearSelect.innerHTML = '<option value="">All years</option>';
-  Object.keys(yearCounts)
-    .sort((a, b) => (a || '').localeCompare(b || ''))
-    .forEach((year) => {
-      const opt = document.createElement('option');
-      opt.value = year;
-      opt.textContent = `${year} (${yearCounts[year]})`;
-      yearSelect.appendChild(opt);
-    });
-
   const modelSelect = document.getElementById('model-select');
-  modelSelect.innerHTML = '<option value="">All models</option>';
-  Object.keys(modelCounts)
-    .sort()
-    .forEach((model) => {
-      const opt = document.createElement('option');
-      opt.value = model;
-      opt.textContent = `${model} (${modelCounts[model]})`;
-      modelSelect.appendChild(opt);
-    });
-
   const trimSelect = document.getElementById('trim-select');
-  trimSelect.innerHTML = '<option value="">All trims</option>';
-  Object.keys(trimCounts)
-    .sort()
-    .forEach((trim) => {
+
+  const selectedType = typeSelect.value;
+  const selectedBrand = brandSelect.value;
+  const selectedYear = yearSelect.value;
+  const selectedModel = modelSelect.value;
+  const selectedTrim = trimSelect.value;
+
+  const buildOptions = (select, counts, placeholder, selectedValue, sortFn) => {
+    select.innerHTML = '';
+    const base = document.createElement('option');
+    base.value = '';
+    base.textContent = placeholder;
+    select.appendChild(base);
+
+    Object.keys(counts)
+      .sort(sortFn || ((a, b) => a.localeCompare(b)))
+      .forEach((key) => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = `${key} (${counts[key]})`;
+        select.appendChild(opt);
+      });
+
+    if (selectedValue && !counts[selectedValue]) {
       const opt = document.createElement('option');
-      opt.value = trim;
-      opt.textContent = `${trim} (${trimCounts[trim]})`;
-      trimSelect.appendChild(opt);
-    });
+      opt.value = selectedValue;
+      opt.textContent = `${selectedValue} (0)`;
+      select.appendChild(opt);
+    }
+
+    select.value = selectedValue || '';
+  };
+
+  buildOptions(typeSelect, typeCounts, 'All types', selectedType);
+  buildOptions(brandSelect, brandCounts, 'All brands', selectedBrand);
+  buildOptions(yearSelect, yearCounts, 'All years', selectedYear, (a, b) => (a || '').localeCompare(b || ''));
+  buildOptions(modelSelect, modelCounts, 'All models', selectedModel);
+  buildOptions(trimSelect, trimCounts, 'All trims', selectedTrim);
 }
 
 function resolveImageSrc(path, inlineData) {
