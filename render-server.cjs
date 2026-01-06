@@ -12,9 +12,9 @@ app.use(express.static(path.join(__dirname)));
 (async () => {
   const { onRequest } = await import('./functions/api/[...all].js');
 
-  async function forwardToOnRequest(req, res, pathOverride = null) {
+  async function forwardToOnRequest(req, res, pathOverride) {
     try {
-      const targetPath = pathOverride || req.originalUrl;
+      const targetPath = pathOverride ?? req.originalUrl;
       const fullUrl = `${req.protocol}://${req.get('host')}${targetPath}`;
       const headers = new Headers();
       Object.entries(req.headers || {}).forEach(([key, value]) => {
@@ -51,12 +51,14 @@ app.use(express.static(path.join(__dirname)));
     }
   }
 
-  app.all('/api', forwardToOnRequest);
-  app.all('/api/*', forwardToOnRequest);
-  app.all('/.netlify/functions/app', forwardToOnRequest);
-  app.all('/.netlify/functions/app/*', forwardToOnRequest);
+  const forward = (overridePath) => (req, res) => forwardToOnRequest(req, res, overridePath);
 
-  app.get('/', (req, res) => forwardToOnRequest(req, res, '/'));
+  app.all('/api', forward());
+  app.all('/api/*', forward());
+  app.all('/.netlify/functions/app', forward());
+  app.all('/.netlify/functions/app/*', forward());
+
+  app.get('/', forward('/'));
 
   app.listen(port, () => {
     console.log(`Render server listening on port ${port}`);
