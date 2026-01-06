@@ -104,7 +104,7 @@ function applyFilters() {
     return matchSearch && matchType && matchBrand && matchYear && matchModel && matchTrim;
   });
 
-  refreshDropdowns(filtered);
+  refreshDropdowns(patterns);
   renderCards(filtered);
 }
 
@@ -118,12 +118,6 @@ function resetFilters() {
 }
 
 function refreshDropdowns(list) {
-  const typeCounts = countBy(list, 'type');
-  const brandCounts = countBy(list, 'brand');
-  const yearCounts = countBy(list, 'year');
-  const modelCounts = countBy(list, 'model');
-  const trimCounts = countBy(list, 'trim');
-
   const typeSelect = document.getElementById('type-select');
   const brandSelect = document.getElementById('brand-select');
   const yearSelect = document.getElementById('year-select');
@@ -135,6 +129,16 @@ function refreshDropdowns(list) {
   const selectedYear = yearSelect.value;
   const selectedModel = modelSelect.value;
   const selectedTrim = trimSelect.value;
+
+  const typeCounts = countBy(list, 'type');
+  const brandCandidates = selectedType ? list.filter((p) => p.type === selectedType) : list;
+  const brandCounts = countBy(brandCandidates, 'brand');
+  const yearCandidates = selectedBrand ? brandCandidates.filter((p) => p.brand === selectedBrand) : brandCandidates;
+  const yearCounts = countBy(yearCandidates, 'year');
+  const modelCandidates = selectedYear ? yearCandidates.filter((p) => p.year === selectedYear) : yearCandidates;
+  const modelCounts = countBy(modelCandidates, 'model');
+  const trimCandidates = selectedModel ? modelCandidates.filter((p) => p.model === selectedModel) : modelCandidates;
+  const trimCounts = countBy(trimCandidates, 'trim');
 
   const buildOptions = (select, counts, placeholder, selectedValue, sortFn) => {
     select.innerHTML = '';

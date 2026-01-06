@@ -157,12 +157,12 @@ function renderPage() {
             </div>
           </div>
           <div class="col-md-2">
-            <label class="form-label">Year</label>
-            <input class="form-control" id="year" name="year" type="text" required>
-          </div>
-          <div class="col-md-2">
             <label class="form-label">Model</label>
             <input class="form-control" id="model" name="model" type="text" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Year</label>
+            <input class="form-control" id="year" name="year" type="text" required>
           </div>
           <div class="col-md-2">
             <label class="form-label">Trim</label>
@@ -207,13 +207,13 @@ function renderPage() {
             <label class="form-label">Brand</label>
             <select class="form-select" name="brand" id="brand-select"></select>
           </div>
-          <div class="col-md-1">
-            <label class="form-label">Year</label>
-            <select class="form-select" name="year" id="year-select"></select>
-          </div>
           <div class="col-md-2">
             <label class="form-label">Model</label>
             <select class="form-select" name="model" id="model-select"></select>
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Year</label>
+            <select class="form-select" name="year" id="year-select"></select>
           </div>
           <div class="col-md-1">
             <label class="form-label">Trim</label>
