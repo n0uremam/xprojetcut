@@ -1,46 +1,32 @@
-# Cloudflare Pages + Pages Functions sanity check
+# Render-ready patterns library
 
-This repository serves a static landing page plus a Node.js Pages Function (`functions/api/[...all].js`) that renders the gallery UI and exposes the patterns API. It is ready for a GitHub-connected Cloudflare Pages deployment.
+This repository hosts a full Express server for Render Web Services. It serves the pattern gallery UI and a CockroachDB-backed API from the same process that listens on `process.env.PORT`.
 
-## Folder layout
+## Project layout
 ```
 .
-├── Homepage.html        # Root landing page -> redirects to /api
-├── _redirects           # Sends / to Homepage.html
-├── netlify.toml         # Legacy Netlify config (not used by Cloudflare)
-├── functions
-│   └── api
-│       └── [...all].js  # Cloudflare Pages Function entry
-└── netlify
-    └── functions        # Legacy Netlify function folder (unused on Cloudflare)
-        └── app.cjs
+├── server.js          # Express entrypoint for Render
+├── index.html         # Redirects to /api (optional entry)
+├── static/            # CSS/JS assets used by the inline UI
+└── patterns/          # Optional version-controlled exports
 ```
 
-## Deploying to Cloudflare Pages
-1. Connect the repository to Cloudflare Pages and keep the publish directory as `.` (no build command is required for the static assets).
-2. Pages Functions automatically bundle `functions/api/[...all].js`; no extra configuration is needed.
-3. After deploy, test:
-   - `https://YOUR-SITE.pages.dev/` → shows the loading page briefly
-   - `https://YOUR-SITE.pages.dev/Homepage.html` → same loading page
-   - `https://YOUR-SITE.pages.dev/api` → renders the full gallery UI (or a CockroachDB-backed dataset when configured)
+## Running locally
+1. Install dependencies: `npm install`
+2. Set `DATABASE_URL` (or `NETLIFY_DATABASE_URL`) to your CockroachDB connection string, e.g.
+   `postgresql://USER:PASSWORD@host:26257/defaultdb?sslmode=verify-full`
+3. Start the server: `npm start`
+4. Open `http://localhost:3000/api` to use the app.
 
-## Optional CockroachDB database
+The server will log `DB: cockroach` when connected to CockroachDB, or `DB: memory` if no database URL is provided. Tables are created automatically; no seed data is inserted.
 
-The function can persist patterns to a CockroachDB Cloud (Postgres-compatible) database using the `pg` client. To enable it:
+## Deploying to Render
+- **Build Command:** `npm install`
+- **Start Command:** `npm start`
+- Make sure `DATABASE_URL` (or `NETLIFY_DATABASE_URL`) is configured in Render environment variables.
 
-1. Set an environment variable in Cloudflare Pages (or locally) named `DATABASE_URL` (preferred) or `NETLIFY_DATABASE_URL` with your CockroachDB connection string (for example: `postgresql://abdoelamir:<PASSWORD>@corgi-spectre-20069.j77.aws-eu-central-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full`).
-2. Redeploy. The function will create a `patterns` table automatically (no default rows are inserted) and will log `DB: cockroach` when connected.
-3. When logged in as the admin user (`admin` / `admin123`), new and edited patterns will be upserted to CockroachDB. Uploaded images are stored as Base64 in the `image_data` column alongside `image_url`, and deletes also propagate to the table.
+Routes:
+- `/` and `/api` render the gallery UI.
+- `/api/patterns` provides JSON GET/POST/DELETE for pattern data.
 
-If the environment variable is missing, the app falls back to an in-memory store for the current function instance; patterns start empty until you add some. When CockroachDB is configured but unreachable, the function returns a 500 error instead of silently falling back.
-
-## Using a different backend
-Netlify does **not** run Python/Flask functions. If you need Flask, host it on a Python-friendly provider (Render, Railway, etc.) and call it from the frontend. To keep everything on Netlify, rewrite the backend in Node.js as additional functions alongside `netlify/functions/app.cjs`.
-
-## Render start command
-
-When deploying to Render Web Services, set the **Start Command** to `npm start` so it invokes `node netlify/functions/app.cjs` via the existing script. The function entrypoint is CommonJS-only (`app.cjs`), so avoid pointing Render or local starts at `app.js`.
-
-## Pattern data folder
-
-The `patterns/` directory is included for storing exported pattern JSON or assets under version control. When CockroachDB is configured, admin edits (including uploaded images) are persisted to the database; otherwise the function keeps changes in memory for the current invocation.
+If the database URL is present but unavailable, API calls return `500` errors rather than silently falling back to memory.
