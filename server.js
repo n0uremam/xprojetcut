@@ -27,6 +27,7 @@ let memoryStore = [];
 let pool;
 let tableInitialized = false;
 let dbModeLogged = false;
+const allowMemoryFallback = process.env.ALLOW_MEMORY_FALLBACK === '1';
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -46,7 +47,7 @@ async function getSqlClient(env) {
   const connectionString = getConnectionString(env);
   if (!connectionString) {
     if (!dbModeLogged) {
-      console.log('DB: memory');
+      console.log('DB: memory (no connection string)');
       dbModeLogged = true;
     }
     return null;
@@ -297,7 +298,13 @@ function handleMemory(req, res) {
 
 async function handleApi(req, res) {
   const sql = await getSqlClient(process.env);
-  if (!sql) return handleMemory(req, res);
+  if (!sql) {
+    if (allowMemoryFallback) {
+      return handleMemory(req, res);
+    }
+    console.error('Database connection string missing; memory fallback disabled');
+    return toJson(res, { error: 'Database not configured' }, 500);
+  }
 
   try {
     await ensureTable(sql);

@@ -18,7 +18,7 @@ This repository hosts a full Express server for Render Web Services. It serves t
 3. Start the server: `npm start`
 4. Open `http://localhost:3000/api` to use the app.
 
-The server will log `DB: cockroach` when connected to CockroachDB, or `DB: memory` if no database URL is provided. Tables are created automatically; no seed data is inserted.
+The server will log `DB: cockroach` when connected to CockroachDB, or `DB: memory` if no database URL is provided. Tables are created automatically; no seed data is inserted. To allow the legacy in-memory fallback (not recommended for production), set `ALLOW_MEMORY_FALLBACK=1`.
 
 ## Deploying to Render
 - **Build Command:** `npm install`
