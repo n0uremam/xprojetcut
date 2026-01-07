@@ -34,18 +34,16 @@ const jsonHeaders = {
   "Access-Control-Allow-Origin": "*",
 };
 
-function getConnectionString(env) {
-  if (env && env.NETLIFY_DATABASE_URL) return env.NETLIFY_DATABASE_URL;
-  if (env && env.DATABASE_URL) return env.DATABASE_URL;
+function getConnectionString() {
   if (typeof process !== 'undefined' && process.env) {
-    return process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL || null;
+    return process.env.DATABASE_URL || null;
   }
   return null;
 }
 
-async function getSqlClient(env) {
+async function getSqlClient() {
   if (sqlClient) return sqlClient;
-  const connectionString = getConnectionString(env);
+  const connectionString = getConnectionString();
   if (!connectionString) {
     if (!dbModeLogged) {
       console.log('DB: memory (no connection string configured)');
@@ -304,7 +302,7 @@ async function handleApi(req, res) {
   let sql;
   if (hasDb) {
     try {
-      sql = await getSqlClient(process.env);
+      sql = await getSqlClient();
     } catch (err) {
       console.error('Database connection failed', err);
       return toJson(res, { error: 'Database unavailable' }, 500);
@@ -390,7 +388,7 @@ async function handleApi(req, res) {
 
 (async () => {
   try {
-    await getSqlClient(process.env);
+    await getSqlClient();
   } catch (err) {
     console.error('Startup database initialization failed', err);
   }
