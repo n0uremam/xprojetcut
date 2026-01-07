@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+patterns.db
+node_modules/
