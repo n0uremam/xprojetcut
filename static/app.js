@@ -129,30 +129,30 @@ function refreshDropdowns(search, selections) {
   const modelSelect = document.getElementById('model-select');
   const trimSelect = document.getElementById('trim-select');
 
-  const buildOptions = (select, counts, placeholder, selectedValue, sortFn) => {
-    select.innerHTML = '';
-    const base = document.createElement('option');
-    base.value = '';
-    base.textContent = placeholder;
-    select.appendChild(base);
+  const typeList = document.getElementById('type-options');
+  const brandList = document.getElementById('brand-options');
+  const modelList = document.getElementById('model-options');
+  const yearList = document.getElementById('year-options');
+  const trimList = document.getElementById('trim-options');
+
+  const buildOptions = (listEl, counts, selectedValue, sortFn) => {
+    listEl.innerHTML = '';
 
     Object.keys(counts)
       .sort(sortFn || ((a, b) => a.localeCompare(b)))
       .forEach((key) => {
         const opt = document.createElement('option');
         opt.value = key;
-        opt.textContent = `${key} (${counts[key]})`;
-        select.appendChild(opt);
+        opt.label = `${key} (${counts[key]})`;
+        listEl.appendChild(opt);
       });
 
     if (selectedValue && !counts[selectedValue]) {
       const opt = document.createElement('option');
       opt.value = selectedValue;
-      opt.textContent = `${selectedValue} (0)`;
-      select.appendChild(opt);
+      opt.label = `${selectedValue} (0)`;
+      listEl.appendChild(opt);
     }
-
-    select.value = selectedValue || '';
   };
 
   const searchFiltered = patterns.filter((p) => matchesSearch(p, search));
@@ -170,11 +170,28 @@ function refreshDropdowns(search, selections) {
   const trimBase = yearBase.filter((p) => !selections.year || p.year === selections.year);
   const trimCounts = countBy(trimBase, 'trim');
 
-  buildOptions(typeSelect, typeCounts, 'All types', selections.type);
-  buildOptions(brandSelect, brandCounts, 'All brands', selections.brand);
-  buildOptions(modelSelect, modelCounts, 'All models', selections.model);
-  buildOptions(yearSelect, yearCounts, 'All years', selections.year, (a, b) => (a || '').localeCompare(b || ''));
-  buildOptions(trimSelect, trimCounts, 'All trims', selections.trim);
+  buildOptions(typeList, typeCounts, selections.type);
+  buildOptions(brandList, brandCounts, selections.brand);
+  buildOptions(modelList, modelCounts, selections.model);
+  buildOptions(yearList, yearCounts, selections.year, (a, b) => (a || '').localeCompare(b || ''));
+  buildOptions(trimList, trimCounts, selections.trim);
+
+  typeSelect.placeholder = 'All types';
+  brandSelect.placeholder = 'All brands';
+  modelSelect.placeholder = 'All models';
+  yearSelect.placeholder = 'All years';
+  trimSelect.placeholder = 'All trims';
+
+  typeSelect.value = selections.type || '';
+  brandSelect.value = selections.brand || '';
+  modelSelect.value = selections.model || '';
+  yearSelect.value = selections.year || '';
+  trimSelect.value = selections.trim || '';
+
+  brandSelect.disabled = !selections.type || !Object.keys(brandCounts).length;
+  modelSelect.disabled = !selections.brand || !Object.keys(modelCounts).length;
+  yearSelect.disabled = !selections.model || !Object.keys(yearCounts).length;
+  trimSelect.disabled = !selections.year || !Object.keys(trimCounts).length;
 }
 
 function resolveImageSrc(path, inlineData) {
@@ -345,15 +362,10 @@ function setupTypeOptions() {
   custom.value = 'Custom';
   custom.textContent = 'Custom (add type)';
   typeSelect.appendChild(custom);
-
-  const filterSelect = document.getElementById('type-select');
-  filterSelect.innerHTML = '<option value="">All types</option>';
 }
 
 function setupBrandOptions() {
   populateBrandSelect();
-  const filterSelect = document.getElementById('brand-select');
-  filterSelect.innerHTML = '<option value="">All brands</option>';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -432,8 +444,15 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsDataURL(file);
   });
 
+  document.getElementById('filter-form').addEventListener('input', applyFilters);
   document.getElementById('filter-form').addEventListener('change', applyFilters);
   document.getElementById('search-input').addEventListener('input', applyFilters);
+  ['type-select', 'brand-select', 'model-select', 'year-select', 'trim-select'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', applyFilters);
+    }
+  });
   document.getElementById('reset-filters-btn').addEventListener('click', resetFilters);
 
   document.getElementById('pattern-form').addEventListener('submit', async (e) => {

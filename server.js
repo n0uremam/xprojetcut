@@ -186,23 +186,28 @@ function renderPage() {
           </div>
           <div class="col-md-2">
             <label class="form-label">Type</label>
-            <select class="form-select" name="type" id="type-select"></select>
+            <input class="form-control" type="search" name="type" id="type-select" list="type-options" placeholder="All types">
+            <datalist id="type-options"></datalist>
           </div>
           <div class="col-md-2">
             <label class="form-label">Brand</label>
-            <select class="form-select" name="brand" id="brand-select"></select>
+            <input class="form-control" type="search" name="brand" id="brand-select" list="brand-options" placeholder="All brands" disabled>
+            <datalist id="brand-options"></datalist>
           </div>
           <div class="col-md-2">
             <label class="form-label">Model</label>
-            <select class="form-select" name="model" id="model-select"></select>
+            <input class="form-control" type="search" name="model" id="model-select" list="model-options" placeholder="All models" disabled>
+            <datalist id="model-options"></datalist>
           </div>
           <div class="col-md-1">
             <label class="form-label">Year</label>
-            <select class="form-select" name="year" id="year-select"></select>
+            <input class="form-control" type="search" name="year" id="year-select" list="year-options" placeholder="All years" disabled>
+            <datalist id="year-options"></datalist>
           </div>
           <div class="col-md-1">
             <label class="form-label">Trim</label>
-            <select class="form-select" name="trim" id="trim-select"></select>
+            <input class="form-control" type="search" name="trim" id="trim-select" list="trim-options" placeholder="All trims" disabled>
+            <datalist id="trim-options"></datalist>
           </div>
           <div class="col-md-2 d-flex align-items-end justify-content-end">
             <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" type="button" id="reset-filters-btn">
